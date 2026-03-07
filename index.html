@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Black Hole Typer 🕳️</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap');
+
+  :root {
+    --bg: #0a0a1a;
+    --deep: #060612;
+    --card: #12122a;
+    --border: #2a2a5a;
+    --yellow: #ffe066;
+    --green: #66ffb2;
+    --pink: #ff66c4;
+    --blue: #66ccff;
+    --orange: #ffaa44;
+    --purple: #cc88ff;
+    --text: #e8e8ff;
+    --dim: #7070a0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Nunito', sans-serif;
+    min-height: 100vh;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  #starfield { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+  .star {
+    position: absolute; border-radius: 50%; background: white;
+    animation: twinkle var(--d, 3s) infinite ease-in-out;
+  }
+  @keyframes twinkle {
+    0%,100% { opacity: 0.2; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.4); }
+  }
+
+  .screen { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; padding: 20px; }
+  .screen.hidden { display: none; }
+
+  /* SETUP */
+  #setupScreen h1 {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(2.5rem, 8vw, 5rem);
+    color: var(--yellow);
+    text-shadow: 0 0 30px rgba(255,224,102,0.5);
+    margin-bottom: 8px;
+    letter-spacing: 2px;
+  }
+  #setupScreen .subtitle {
+    color: var(--blue);
+    font-size: clamp(1rem, 3vw, 1.4rem);
+    margin-bottom: 40px;
+    font-weight: 600;
+  }
+  .setup-card {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: 24px;
+    padding: 28px 32px;
+    width: min(560px, 95vw);
+    margin-bottom: 20px;
+  }
+  .setup-card h2 {
+    font-family: 'Fredoka One', cursive;
+    color: var(--purple);
+    font-size: 1.3rem;
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  #letterGrid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .letter-btn {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    border: 2px solid var(--border);
+    background: var(--deep);
+    color: var(--dim);
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.4rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .letter-btn.selected {
+    border-color: var(--green);
+    background: rgba(102,255,178,0.15);
+    color: var(--green);
+    box-shadow: 0 0 12px rgba(102,255,178,0.3);
+    transform: scale(1.08);
+  }
+  .letter-btn:hover { border-color: var(--blue); color: var(--blue); }
+  .quick-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .quick-btn {
+    padding: 6px 14px; border-radius: 20px; border: 2px solid var(--border);
+    background: transparent; color: var(--dim); font-family: 'Nunito', sans-serif;
+    font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all 0.15s;
+  }
+  .quick-btn:hover { border-color: var(--purple); color: var(--purple); }
+  #startBtn {
+    padding: 18px 56px;
+    border-radius: 50px; border: none;
+    background: linear-gradient(135deg, var(--yellow), var(--orange));
+    color: #1a0a00;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.6rem;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(255,170,44,0.4);
+    transition: transform 0.1s, box-shadow 0.1s;
+    letter-spacing: 1px;
+  }
+  #startBtn:hover { transform: scale(1.05); box-shadow: 0 6px 28px rgba(255,170,44,0.6); }
+  #startBtn:active { transform: scale(0.97); }
+  #startBtn:disabled { opacity: 0.4; cursor: default; transform: none; }
+  #noLettersMsg { color: var(--pink); font-size: 0.9rem; font-weight: 700; text-align: center; margin-top: 8px; min-height: 20px; }
+
+  /* GAME SCREEN */
+  #gameScreen { justify-content: flex-start; padding: 0; }
+  #gameHeader {
+    width: 100%; padding: 16px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    z-index: 20;
+    background: linear-gradient(to bottom, rgba(10,10,26,0.95), transparent);
+  }
+  #backBtn {
+    background: transparent; border: 2px solid var(--border);
+    color: var(--dim); border-radius: 12px; padding: 8px 16px;
+    font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.9rem;
+    cursor: pointer; transition: all 0.15s;
+  }
+  #backBtn:hover { border-color: var(--pink); color: var(--pink); }
+  #scoreDisplay { display: flex; align-items: center; gap: 16px; }
+  .score-pill {
+    background: var(--card); border: 2px solid var(--border);
+    border-radius: 20px; padding: 6px 18px;
+    font-family: 'Fredoka One', cursive; font-size: 1.1rem;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .score-pill.swallowed { color: var(--yellow); border-color: rgba(255,224,102,0.4); }
+  .score-pill.streak { color: var(--orange); border-color: rgba(255,170,44,0.4); }
+
+  #gameArea {
+    flex: 1; width: 100%;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    position: relative; padding: 16px;
+  }
+
+  #letterDisplay {
+    position: relative;
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  /* ── BLACK HOLE ── */
+  #blackHoleWrap {
+    position: relative;
+    width: 200px; height: 200px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* Outer glow haze */
+  .bh-haze {
+    position: absolute;
+    inset: -30px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(120,60,200,0.18) 0%, rgba(255,120,30,0.08) 50%, transparent 70%);
+    animation: hazeBreath 4s ease-in-out infinite;
+  }
+  @keyframes hazeBreath { 0%,100%{ transform:scale(1); opacity:0.7; } 50%{ transform:scale(1.08); opacity:1; } }
+
+  /* Accretion disc -- outer ring */
+  .bh-disc-outer {
+    position: absolute;
+    width: 190px; height: 56px;
+    border-radius: 50%;
+    background: conic-gradient(
+      from 0deg,
+      rgba(255,140,30,0.9),
+      rgba(255,200,60,0.7),
+      rgba(200,80,255,0.6),
+      rgba(255,100,180,0.7),
+      rgba(255,140,30,0.9)
+    );
+    filter: blur(3px);
+    animation: discSpin 2.6s linear infinite;
+    z-index: 2;
+  }
+  /* Accretion disc -- inner ring, faster, slightly different hue */
+  .bh-disc-inner {
+    position: absolute;
+    width: 148px; height: 36px;
+    border-radius: 50%;
+    background: conic-gradient(
+      from 180deg,
+      rgba(255,180,60,0.95),
+      rgba(255,120,30,0.8),
+      rgba(160,60,255,0.7),
+      rgba(255,180,60,0.95)
+    );
+    filter: blur(2px);
+    animation: discSpin 1.7s linear infinite reverse;
+    z-index: 3;
+  }
+  @keyframes discSpin { from{ transform: rotateX(72deg) rotate(0deg); } to{ transform: rotateX(72deg) rotate(360deg); } }
+
+  /* The dark centre */
+  .bh-core {
+    position: absolute;
+    width: 88px; height: 88px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #000 55%, #0a0020 80%, transparent 100%);
+    box-shadow: 0 0 0 6px rgba(0,0,0,0.9), 0 0 30px 12px rgba(0,0,0,0.8);
+    z-index: 4;
+  }
+
+  /* The floating space object to be swallowed */
+  #spaceObject {
+    position: absolute;
+    font-size: 3rem;
+    z-index: 6;
+    top: -52px;
+    animation: objectFloat 2.5s ease-in-out infinite;
+    filter: drop-shadow(0 0 10px rgba(255,220,100,0.7));
+    transition: none;
+  }
+  @keyframes objectFloat { 0%,100%{ transform: translateY(0px) scale(1); } 50%{ transform: translateY(-10px) scale(1.05); } }
+
+  /* Suck-in animation */
+  @keyframes suckIn {
+    0%   { transform: scale(1) rotate(0deg) translate(0,0); opacity: 1; }
+    60%  { transform: scale(0.5) rotate(180deg) translate(0, 30px); opacity: 0.8; }
+    100% { transform: scale(0) rotate(360deg) translate(0, 50px); opacity: 0; }
+  }
+  .sucking { animation: suckIn 0.55s ease-in forwards !important; }
+
+  /* Gravitational lens ripple on correct key */
+  @keyframes lensRipple {
+    0%   { width: 92px; height: 92px; opacity: 0.9; }
+    100% { width: 240px; height: 240px; opacity: 0; }
+  }
+  .lens-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 3px solid rgba(180,100,255,0.7);
+    animation: lensRipple 0.55s ease-out forwards;
+    z-index: 5;
+    pointer-events: none;
+  }
+
+  #targetLetter {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(5rem, 18vw, 8rem);
+    color: var(--yellow);
+    text-shadow: 0 0 40px rgba(255,224,102,0.6), 0 0 80px rgba(255,224,102,0.3);
+    line-height: 1;
+    animation: letterPop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes letterPop { from{ transform: scale(0.3) rotate(-10deg); opacity:0; } to{ transform: scale(1) rotate(0); opacity:1; } }
+  #hint { color: var(--dim); font-size: 1rem; font-weight: 600; }
+
+  /* Inward particle */
+  .particle-in {
+    position: fixed;
+    pointer-events: none;
+    border-radius: 50%;
+    z-index: 100;
+    animation: flyIn var(--dur) ease-in forwards;
+  }
+  @keyframes flyIn {
+    from { transform: translate(0,0) scale(1); opacity: 1; }
+    to   { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
+  }
+
+  @keyframes wrongShake {
+    0%,100% { transform: translateX(0); }
+    20% { transform: translateX(-12px); }
+    40% { transform: translateX(12px); }
+    60% { transform: translateX(-8px); }
+    80% { transform: translateX(8px); }
+  }
+  .shake { animation: wrongShake 0.3s ease-in-out; }
+
+  /* COLLECTION */
+  #collectionArea {
+    width: min(680px, 95vw);
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: 20px;
+    padding: 14px 18px;
+    margin-top: 12px;
+  }
+  #collectionArea h3 {
+    font-family: 'Fredoka One', cursive;
+    color: var(--purple);
+    font-size: 1rem;
+    margin-bottom: 8px;
+  }
+  #collectionGrid { display: flex; flex-wrap: wrap; gap: 5px; min-height: 32px; }
+  .collected-item {
+    font-size: 1.5rem;
+    animation: collectPop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes collectPop { from{ transform: scale(0); } to{ transform: scale(1); } }
+
+  /* KEYBOARD */
+  #kbdHint {
+    display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;
+    max-width: min(680px, 95vw);
+    margin-top: 10px;
+  }
+  .kbd-key {
+    padding: 8px 14px;
+    border-radius: 10px;
+    background: var(--deep);
+    border: 2px solid var(--border);
+    font-family: 'Fredoka One', cursive;
+    font-size: 1rem;
+    color: var(--dim);
+    transition: all 0.1s;
+    min-width: 44px; text-align: center;
+  }
+  .kbd-key.active-letter {
+    border-color: var(--yellow); color: var(--yellow);
+    background: rgba(255,224,102,0.1);
+    box-shadow: 0 0 10px rgba(255,224,102,0.3);
+  }
+  .kbd-key.correct-flash { background: var(--green) !important; color: #001a0a !important; border-color: var(--green) !important; transform: scale(1.2); }
+  .kbd-key.wrong-flash   { background: var(--pink) !important; color: #1a0010 !important; border-color: var(--pink) !important; }
+
+  /* STORY MODAL */
+  #storyModal {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(6,6,18,0.92);
+    display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(8px);
+    padding: 20px;
+  }
+  #storyModal.hidden { display: none; }
+  .story-card {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: 28px;
+    padding: 28px 32px;
+    width: min(620px, 98vw);
+    max-height: 90vh;
+    overflow-y: auto;
+    display: flex; flex-direction: column; gap: 20px;
+  }
+  .story-header { text-align: center; }
+  .story-badge { font-size: 3rem; margin-bottom: 8px; }
+  .story-header h2 { font-family: 'Fredoka One', cursive; color: var(--yellow); font-size: 1.8rem; margin-bottom: 4px; }
+  .story-header p { color: var(--blue); font-size: 1rem; font-weight: 600; }
+  .story-chunks { display: flex; flex-direction: column; gap: 12px; }
+  .chunk-block {
+    border-radius: 16px; padding: 16px 20px;
+    border: 2px solid var(--border);
+    background: rgba(255,255,255,0.03);
+    position: relative;
+  }
+  .chunk-block p { font-size: 1.05rem; line-height: 1.65; color: rgba(200,200,230,0.5); font-weight: 600; }
+  .chunk-block.new-chunk { border-color: var(--yellow); background: rgba(255,224,102,0.07); box-shadow: 0 0 20px rgba(255,224,102,0.15); }
+  .chunk-block.new-chunk p { color: var(--text); }
+  .new-label {
+    position: absolute; top: -12px; right: 16px;
+    background: var(--yellow); color: #1a0a00;
+    font-family: 'Fredoka One', cursive; font-size: 0.75rem;
+    padding: 2px 10px; border-radius: 20px; letter-spacing: 0.5px;
+  }
+  .chunk-locked {
+    border-radius: 16px; padding: 14px 20px;
+    border: 2px dashed rgba(100,100,160,0.3);
+    text-align: center; color: var(--dim); font-size: 0.9rem; font-weight: 700;
+  }
+  .congrats-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .congrats-btn {
+    padding: 14px 32px; border-radius: 50px; border: none;
+    font-family: 'Fredoka One', cursive; font-size: 1.2rem;
+    cursor: pointer; transition: transform 0.1s;
+  }
+  .congrats-btn:hover { transform: scale(1.05); }
+  .congrats-btn.primary { background: linear-gradient(135deg, var(--yellow), var(--orange)); color: #1a0a00; }
+  .congrats-btn.secondary { background: var(--deep); border: 2px solid var(--border); color: var(--text); }
+</style>
+</head>
+<body>
+
+<div id="starfield"></div>
+
+<!-- SETUP SCREEN -->
+<div id="setupScreen" class="screen">
+  <h1>🕳️ Black Hole Typer</h1>
+  <p class="subtitle">Hi Isaac! Feed the black hole -- type the letter to swallow it! 🌟</p>
+
+  <div class="setup-card">
+    <h2>👆 Pick your letters to practise</h2>
+    <div class="quick-btns">
+      <button class="quick-btn" onclick="selectGroup('aeiou')">Vowels</button>
+      <button class="quick-btn" onclick="selectGroup('abcde')">a--e</button>
+      <button class="quick-btn" onclick="selectGroup('fghij')">f--j</button>
+      <button class="quick-btn" onclick="selectGroup('abcdefghijklmnopqrstuvwxyz')">All!</button>
+      <button class="quick-btn" onclick="selectGroup('')">Clear</button>
+    </div>
+    <div id="letterGrid"></div>
+    <p id="noLettersMsg"></p>
+  </div>
+
+  <button id="startBtn" onclick="startGame()" disabled>🚀 Let's Go!</button>
+</div>
+
+<!-- GAME SCREEN -->
+<div id="gameScreen" class="screen hidden">
+  <div id="gameHeader">
+    <button id="backBtn" onclick="goBack()">← Change Letters</button>
+    <div id="scoreDisplay">
+      <div class="score-pill swallowed">🕳️ Swallowed: <span id="swallowedCount">0</span></div>
+      <div class="score-pill streak">🔥 Streak: <span id="streakCount">0</span></div>
+    </div>
+  </div>
+
+  <div id="gameArea">
+    <div id="letterDisplay">
+
+      <!-- BLACK HOLE -->
+      <div id="blackHoleWrap">
+        <div class="bh-haze"></div>
+        <div class="bh-disc-outer"></div>
+        <div class="bh-disc-inner"></div>
+        <div class="bh-core"></div>
+        <div id="spaceObject">⭐</div>
+      </div>
+
+      <div id="targetLetter">a</div>
+      <div id="hint">Press this key to feed the black hole!</div>
+    </div>
+
+    <div id="kbdHint"></div>
+
+    <div id="collectionArea">
+      <h3>🕳️ Swallowed by the Black Hole (<span id="collectedCount">0</span>)</h3>
+      <div id="collectionGrid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- STORY MODAL -->
+<div id="storyModal" class="hidden">
+  <div class="story-card">
+    <div class="story-header">
+      <div class="story-badge" id="storyBadge">🌟</div>
+      <h2 id="storyTitle">Story unlocked!</h2>
+      <p id="storySubtitle"></p>
+    </div>
+    <div class="story-chunks" id="storyChunks"></div>
+    <div class="congrats-btns">
+      <button class="congrats-btn primary" onclick="keepPlaying()">Keep Going! 🚀</button>
+      <button class="congrats-btn secondary" onclick="goBack()">Change Letters</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STARFIELD ──────────────────────────────────────────────────
+const sf = document.getElementById('starfield');
+for (let i = 0; i < 120; i++) {
+  const s = document.createElement('div');
+  s.className = 'star';
+  const sz = Math.random() * 3 + 1;
+  s.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;width:${sz}px;height:${sz}px;--d:${2+Math.random()*4}s;animation-delay:${Math.random()*4}s;`;
+  sf.appendChild(s);
+}
+
+// ── SPACE OBJECTS ──────────────────────────────────────────────
+const OBJECTS = ['⭐','🌟','💫','☄️','🌙','🪐','🚀','🛸','👾','🤖','🔭','🌌','💎','🔮','🌠','✨','⚡','🎯','🌀','🪨'];
+
+// ── STORY DATA ─────────────────────────────────────────────────
+const HEROES = [
+  { name:'Admiral Glorbf', trait:'been flying through space for 400 years and had never once found his keys', opening:'He was halfway through his afternoon nap', sound:'BZZZT-PING', title:'Admiral', gag:'Glorbf still could not find his keys.' },
+  { name:'Commander Bloop', trait:'the squishiest alien in the whole Blobby Galaxy, and very proud of it', opening:'He was practising his squishing in the mirror', sound:'BEEP-BLOOP-BEEP', title:'Commander', gag:'Bloop celebrated by doing an enormous squelchy victory dance.' },
+  { name:'Captain Zorzax', trait:'three heads, seven elbows, and absolutely terrible taste in hats', opening:'She was trying on her fourteenth hat of the morning', sound:'KRRZT-KRRZT', title:'Captain', gag:'Zorzax immediately bought a celebratory hat, which was also terrible.' },
+  { name:'General Snorble', trait:'the loudest sneeze in the universe -- he once accidentally launched a satellite', opening:'He was trying very hard not to sneeze', sound:'BWONK-BWONK', title:'General', gag:'Snorble sneezed with relief, and three nearby asteroids changed course.' }
+];
+const PROBLEMS = [
+  { announcement:'Someone has stolen ALL the cheese', clue:'The thief had left behind only one clue: a tiny flag that said "WE TOOK THE CHEESE, HA HA."', tool:'his Cheese Detector 3000', toolFail:'immediately fell off the wall with a sad CLONK', thing:'The cheese', state:'returned, slightly nibbled but otherwise fine' },
+  { announcement:'The moon has grown an enormous pair of eyebrows and is frowning', clue:'A scan revealed the eyebrows were made entirely of space jam, which explained the smell.', tool:'the Eyebrow Analysis Module', toolFail:'printed out a single piece of paper that just said "yep, jam" and then ran out of ink', thing:'The moon', state:'back to its normal expression, though slightly sticky' },
+  { announcement:'The ship\'s engine has been replaced with a very large potato', clue:'The potato had a small label on it reading "SORRY" in very tiny handwriting.', tool:'the Emergency Potato Scanner', toolFail:'beeped twice, said "it\'s definitely a potato," and went to sleep', thing:'The engine', state:'restored -- the potato was later made into a very filling soup' },
+  { announcement:'Every single button on the ship now makes a noise like a sad trombone', clue:'Someone had replaced all 247 button-sounds overnight, including the one for the kettle, which was now deeply upsetting.', tool:'the Button Noise Investigator (Mark IV)', toolFail:'played a sad trombone noise and then fell off the shelf', thing:'The buttons', state:'restored to normal, except the kettle button, which everyone quietly agreed sounded better now' }
+];
+const HELPERS = [
+  { entrance:'an extremely tiny spaceship landed on the dashboard, piloted by a hamster in a space helmet', name:'Brigadier Fluffington III', offer:'I know exactly what\'s going on', condition:'It will cost you seventeen sunflower seeds' },
+  { entrance:'a small robot zoomed in through the ventilation shaft, riding a space tortoise', name:'Pipwick', offer:'Have you considered that the answer might be on Planet Splunge?', condition:'Do you know how long it took me to find this tortoise?' },
+  { entrance:'a tiny door opened in the wall and out stepped a robot the size of a grape', name:'Unit 00-BLIP', offer:'I have been monitoring this situation for some time. I know where you need to go', condition:'I am coming with you whether you like it or not' },
+  { entrance:'a battered old spaceship pulled alongside and a very old alien leaned out the window, wearing enormous sunglasses', name:'The Ancient One', offer:'Seen it before. You\'ll want Planet Splunge', condition:'Don\'t ask me how I know. I just know' }
+];
+const VILLAINS = [
+  { desc:'a raccoon in a rocket suit, surrounded by an enormous pile of stolen goods', line:'Nobody ever gave me a birthday cake', attribution:'said the raccoon, looking both guilty and hopeful' },
+  { desc:'three robots standing in front of a large pile of things, all talking at once', line:'We completely forgot we were supposed to be guarding anything. We were discussing soup', attribution:'said all three robots in unison, which they found rather surprising' },
+  { desc:'an enormous teapot-shaped cloud wearing a small golden crown', line:'I just wanted someone to notice me. I have been floating here for eleven years', attribution:'said the cloud, in a voice like a foghorn full of feelings' },
+  { desc:'a very small snail in a tiny helmet, looking absolutely mortified', line:'I didn\'t mean to. I sat on some buttons. I\'ve been trying to fix it for weeks', attribution:'said the snail, in a voice barely above a whisper' }
+];
+const RESOLUTIONS = [
+  { action:'thought about this for a moment, then baked a magnificent birthday cake on the spot', outcome:'and everyone agreed that a cake fixes most things, which is usually true' },
+  { action:'put the kettle on (which played a sad trombone noise) and made everyone a large cup of tea', outcome:'and by the second cup everyone was feeling considerably better' },
+  { action:'paid the seventeen sunflower seeds, shook everyone\'s hand firmly, and declared the matter closed', outcome:'and Brigadier Fluffington III did a small celebratory lap of the ship on his tiny spaceship' },
+  { action:'felt a familiar tickle, held up one finger as a warning to everyone, and then sneezed with tremendous force', outcome:'and the sneeze was so powerful it shook everything back to exactly how it should be' }
+];
+
+const MILESTONES = [
+  { count:10, badge:'🌟', title:'Space Explorer!',    subtitle:'Isaac, the black hole swallowed 10 things -- and your story has begun!' },
+  { count:20, badge:'🚀', title:'Rocket Typist!',     subtitle:'The plot thickens, Isaac...' },
+  { count:30, badge:'🪐', title:'Galaxy Master!',     subtitle:'A mysterious helper has arrived...' },
+  { count:40, badge:'👾', title:'Cosmic Wrangler!',   subtitle:'The adventure reaches Planet Splunge!' },
+  { count:50, badge:'🌌', title:'Universe Champion!', subtitle:'The story is complete, Isaac! What a legend.' }
+];
+
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function buildStory(h, p, he, v, r) {
+  return [
+    `${h.name} had ${h.trait}. ${h.opening} when the ship's computer ${h.sound}ed urgently: "${h.title}! ${p.announcement}!"`,
+    `${p.clue} ${h.name} grabbed ${p.tool}, which ${p.toolFail}.`,
+    `Just then, ${he.entrance}. "${he.offer}," said ${he.name}. "${he.condition}."`,
+    `${he.name} led them to Planet Splunge, where they came face to face with ${v.desc}. "${v.line}," ${v.attribution}.`,
+    `${h.name} ${r.action}. ${p.thing} was ${p.state}, ${r.outcome} -- and everyone agreed it had been the strangest Tuesday in 400 years. ${h.gag}`
+  ];
+}
+
+// ── STATE ──────────────────────────────────────────────────────
+let selectedLetters = new Set();
+let currentLetter = '';
+let swallowed = 0;
+let streak = 0;
+let collection = [];
+let currentObjIdx = 0;
+let isAnimating = false;
+let storyChunks = [];
+let chunksUnlocked = 0;
+
+// ── LETTER GRID ────────────────────────────────────────────────
+const alpha = 'abcdefghijklmnopqrstuvwxyz';
+const grid = document.getElementById('letterGrid');
+alpha.split('').forEach(l => {
+  const btn = document.createElement('button');
+  btn.className = 'letter-btn';
+  btn.textContent = l;
+  btn.dataset.letter = l;
+  btn.onclick = () => toggleLetter(l, btn);
+  grid.appendChild(btn);
+});
+
+function toggleLetter(l, btn) {
+  if (selectedLetters.has(l)) { selectedLetters.delete(l); btn.classList.remove('selected'); }
+  else { selectedLetters.add(l); btn.classList.add('selected'); }
+  updateStartBtn();
+}
+function selectGroup(letters) {
+  document.querySelectorAll('.letter-btn').forEach(b => b.classList.remove('selected'));
+  selectedLetters = new Set();
+  letters.split('').forEach(l => {
+    selectedLetters.add(l);
+    const btn = document.querySelector(`.letter-btn[data-letter="${l}"]`);
+    if (btn) btn.classList.add('selected');
+  });
+  updateStartBtn();
+}
+function updateStartBtn() {
+  const btn = document.getElementById('startBtn');
+  const msg = document.getElementById('noLettersMsg');
+  if (selectedLetters.size === 0) { btn.disabled = true; msg.textContent = ''; }
+  else { btn.disabled = false; msg.textContent = `${selectedLetters.size} letter${selectedLetters.size>1?'s':''} selected ✓`; }
+}
+
+// ── KEYBOARD ───────────────────────────────────────────────────
+function buildKeyboard() {
+  const rows = ['qwertyuiop','asdfghjkl','zxcvbnm'];
+  const kbdHint = document.getElementById('kbdHint');
+  kbdHint.innerHTML = '';
+  const letters = Array.from(selectedLetters);
+  rows.forEach(row => {
+    row.split('').forEach(k => {
+      if (!letters.includes(k)) return;
+      const el = document.createElement('div');
+      el.className = 'kbd-key';
+      el.id = `key-${k}`;
+      el.textContent = k;
+      kbdHint.appendChild(el);
+    });
+  });
+}
+
+// ── GAME START ─────────────────────────────────────────────────
+function startGame() {
+  if (selectedLetters.size === 0) return;
+  swallowed = 0; streak = 0; collection = []; chunksUnlocked = 0;
+  document.getElementById('swallowedCount').textContent = 0;
+  document.getElementById('streakCount').textContent = 0;
+  document.getElementById('collectionGrid').innerHTML = '';
+  document.getElementById('collectedCount').textContent = 0;
+  storyChunks = buildStory(pick(HEROES), pick(PROBLEMS), pick(HELPERS), pick(VILLAINS), pick(RESOLUTIONS));
+  document.getElementById('setupScreen').classList.add('hidden');
+  document.getElementById('gameScreen').classList.remove('hidden');
+  buildKeyboard();
+  nextLetter();
+  document.addEventListener('keydown', handleKey);
+}
+
+function goBack() {
+  document.removeEventListener('keydown', handleKey);
+  document.getElementById('gameScreen').classList.add('hidden');
+  document.getElementById('storyModal').classList.add('hidden');
+  document.getElementById('setupScreen').classList.remove('hidden');
+}
+
+// ── GAME LOOP ──────────────────────────────────────────────────
+function nextLetter() {
+  const letters = Array.from(selectedLetters);
+  let next;
+  if (letters.length === 1) { next = letters[0]; }
+  else { do { next = letters[Math.floor(Math.random() * letters.length)]; } while (next === currentLetter); }
+  currentLetter = next;
+
+  const tl = document.getElementById('targetLetter');
+  tl.textContent = currentLetter;
+  tl.style.animation = 'none';
+  void tl.offsetWidth;
+  tl.style.animation = 'letterPop 0.4s cubic-bezier(0.34,1.56,0.64,1)';
+
+  // New space object
+  currentObjIdx = Math.floor(Math.random() * OBJECTS.length);
+  const obj = document.getElementById('spaceObject');
+  obj.textContent = OBJECTS[currentObjIdx];
+  obj.style.animation = 'none';
+  obj.classList.remove('sucking');
+  void obj.offsetWidth;
+  obj.style.animation = 'objectFloat 2.5s ease-in-out infinite';
+
+  document.querySelectorAll('.kbd-key').forEach(k => k.classList.remove('active-letter'));
+  const kEl = document.getElementById(`key-${currentLetter}`);
+  if (kEl) kEl.classList.add('active-letter');
+}
+
+function handleKey(e) {
+  if (isAnimating) return;
+  const pressed = e.key.toLowerCase();
+  if (pressed.length !== 1 || !/[a-z]/.test(pressed)) return;
+
+  const kEl = document.getElementById(`key-${pressed}`);
+
+  if (pressed === currentLetter) {
+    isAnimating = true;
+    swallowed++;
+    streak++;
+    document.getElementById('swallowedCount').textContent = swallowed;
+    document.getElementById('streakCount').textContent = streak;
+
+    if (kEl) {
+      kEl.classList.remove('active-letter');
+      kEl.classList.add('correct-flash');
+      setTimeout(() => kEl.classList.remove('correct-flash'), 300);
+    }
+
+    // Suck the object in
+    const obj = document.getElementById('spaceObject');
+    obj.style.animation = 'none';
+    obj.classList.add('sucking');
+
+    // Lens ripple
+    const wrap = document.getElementById('blackHoleWrap');
+    const ring = document.createElement('div');
+    ring.className = 'lens-ring';
+    wrap.appendChild(ring);
+    setTimeout(() => ring.remove(), 600);
+
+    // Add to collection
+    const item = OBJECTS[currentObjIdx];
+    collection.push(item);
+    document.getElementById('collectedCount').textContent = collection.length;
+    const span = document.createElement('span');
+    span.className = 'collected-item';
+    span.textContent = item;
+    document.getElementById('collectionGrid').appendChild(span);
+
+    // Inward particles
+    spawnInwardParticles();
+
+    if (collection.length % 10 === 0 && collection.length <= 50) {
+      setTimeout(() => { isAnimating = false; showStory(); }, 700);
+    } else {
+      setTimeout(() => { isAnimating = false; nextLetter(); }, 700);
+    }
+
+  } else {
+    streak = 0;
+    document.getElementById('streakCount').textContent = 0;
+    if (kEl) { kEl.classList.add('wrong-flash'); setTimeout(() => kEl.classList.remove('wrong-flash'), 300); }
+    const tl = document.getElementById('targetLetter');
+    tl.classList.add('shake');
+    setTimeout(() => tl.classList.remove('shake'), 300);
+  }
+}
+
+// ── INWARD PARTICLES ───────────────────────────────────────────
+function spawnInwardParticles() {
+  const colors = ['#ffe066','#ffaa44','#cc88ff','#ff66c4','#66ccff','#66ffb2'];
+  // Centre of black hole in viewport coords
+  const wrap = document.getElementById('blackHoleWrap');
+  const rect = wrap.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+
+  for (let i = 0; i < 20; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle-in';
+    // Spawn in a ring around the black hole, particles travel inward to centre
+    const angle = (Math.PI * 2 * i) / 20 + Math.random() * 0.3;
+    const spawnDist = 90 + Math.random() * 80;
+    const sx = cx + Math.cos(angle) * spawnDist;
+    const sy = cy + Math.sin(angle) * spawnDist;
+    // dx/dy are the delta to travel (toward centre)
+    const dx = -(Math.cos(angle) * spawnDist);
+    const dy = -(Math.sin(angle) * spawnDist);
+    const size = 3 + Math.random() * 7;
+    p.style.cssText = `left:${sx}px;top:${sy}px;width:${size}px;height:${size}px;background:${colors[Math.floor(Math.random()*colors.length)]};--dx:${dx}px;--dy:${dy}px;--dur:${0.35+Math.random()*0.25}s;margin-left:-${size/2}px;margin-top:-${size/2}px;`;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 700);
+  }
+}
+
+// ── STORY MODAL ────────────────────────────────────────────────
+function showStory() {
+  chunksUnlocked = Math.min(collection.length / 10, 5);
+  const meta = MILESTONES.find(m => m.count === collection.length) ||
+    { badge:'⭐', title:'Keep going, Isaac!', subtitle:`${collection.length} things swallowed!` };
+
+  document.getElementById('storyBadge').textContent = meta.badge;
+  document.getElementById('storyTitle').textContent = meta.title;
+  document.getElementById('storySubtitle').textContent = meta.subtitle;
+
+  const container = document.getElementById('storyChunks');
+  container.innerHTML = '';
+
+  for (let i = 0; i < 5; i++) {
+    if (i < chunksUnlocked) {
+      const block = document.createElement('div');
+      const isNew = (i === chunksUnlocked - 1);
+      block.className = 'chunk-block' + (isNew ? ' new-chunk' : '');
+      if (isNew) {
+        const label = document.createElement('div');
+        label.className = 'new-label';
+        label.textContent = 'NEW!';
+        block.appendChild(label);
+      }
+      const p = document.createElement('p');
+      p.textContent = storyChunks[i];
+      block.appendChild(p);
+      container.appendChild(block);
+    } else {
+      const locked = document.createElement('div');
+      locked.className = 'chunk-locked';
+      const remaining = (i + 1) * 10 - collection.length;
+      locked.textContent = `🔒 Swallow ${remaining} more thing${remaining !== 1 ? 's' : ''} to unlock...`;
+      container.appendChild(locked);
+    }
+  }
+
+  setTimeout(() => {
+    const newChunk = container.querySelector('.new-chunk');
+    if (newChunk) newChunk.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 300);
+
+  document.getElementById('storyModal').classList.remove('hidden');
+}
+
+function keepPlaying() {
+  document.getElementById('storyModal').classList.add('hidden');
+  nextLetter();
+}
+</script>
+</body>
+</html>
