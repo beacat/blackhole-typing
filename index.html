@@ -628,6 +628,7 @@
     <div id="scoreDisplay">
       <div class="score-pill swallowed">🕳️ <span id="swallowedCount">0</span>/50</div>
       <div class="score-pill streak">🔥 Streak: <span id="streakCount">0</span></div>
+      <div class="score-pill">📝 Total: <span id="totalWordsCount">0</span></div>
     </div>
   </div>
 
@@ -1219,6 +1220,67 @@ let currentLetter = '';
 let swallowed = 0;
 let streak = 0;
 let bestStreak = 0;
+
+function getTotalWordsCookie() {
+  const m = document.cookie.match(/(?:^|; )totalWordsTyped=(\d+)/);
+  return m ? parseInt(m[1], 10) : 0;
+}
+function saveTotalWordsCookie(n) {
+  const expires = new Date(Date.now() + 365 * 864e5).toUTCString();
+  document.cookie = `totalWordsTyped=${n}; expires=${expires}; path=/`;
+}
+
+const MILESTONE_MESSAGES = {
+  50:   "50 words! The black hole's appetite is just warming up.",
+  100:  "100 words fed to the void. It wants more.",
+  150:  'Commander Bloop squished with approval. "I\'ve never seen typing that good, and I am very squishy."',
+  200:  "200 words consumed. A small galaxy's worth of language, gone.",
+  250:  'Captain Zorzax adjusted her fourteenth hat. "All three of my heads agree — you\'re unstoppable."',
+  300:  "300 words. The black hole has started keeping score.",
+  350:  "Lieutenant Vrumf waved all seven arms in your honour. It caused minor chaos. Worth it.",
+  400:  "400 words. Whole solar systems have collapsed in less time.",
+  450:  'Admiral Glorbf looked up from his nap. "Remarkable," he said, then went back to sleep.',
+  500:  "500 words. Half a thousand. The universe pauses briefly.",
+  550:  "Ensign Plibwick broke the applause button trying to clap. She says that counts.",
+  600:  "600 words. The fabric of spacetime has a slight dent in it now.",
+  650:  "Commodore Glonk's moustache — which has its own rank — salutes you.",
+  700:  "700 words. Astronomers are beginning to notice an anomaly.",
+  750:  "General Snorble held in a sneeze out of sheer respect.",
+  800:  "800 words. Legends are made of less.",
+  850:  "Major Squibb built a gadget specifically to celebrate you. It exploded. She says that's the highest honour.",
+  900:  "900 words. You are statistically impossible and yet here you are.",
+  950:  'Captain Fnorb woke up briefly, said "impressive," and immediately fell back asleep.',
+  1000: "1,000 words. One thousand. The black hole bows. Everything bows.",
+  1100: "Vice Admiral Dweep has filed seventeen forms recognising this achievement. In triplicate.",
+  1200: "1,200 words. The void has cleared its entire schedule for you.",
+  1300: "Brigadier Fluffington III landed his tiny ship on your keyboard. \"Outstanding,\" he squeaked.",
+  1500: "1,500 words. You've typed more than most ship's logs contain.",
+  1750: "Commander Bloop, Captain Zorzax, and Admiral Glorbf are all watching now. Nobody is saying anything. They're just watching.",
+  2000: "2,000 words. At this point you ARE the void.",
+};
+const MILESTONE_HERO_LOOP = [
+  'Admiral Glorbf looked up from his nap again. "Still going?" he said. "Extraordinary." He went back to sleep.',
+  'Commander Bloop has started telling other aliens about you. They don\'t believe her.',
+  'Captain Zorzax is on her twenty-second hat. She says each one is in your honour.',
+  "General Snorble has now sneezed twice — once from surprise, once from pride.",
+  "Lieutenant Vrumf has run out of arms to wave. He is waving his ears instead.",
+  "Ensign Plibwick broke the replacement applause button too. She's given up and is just cheering.",
+  "Commodore Glonk's moustache has written a formal commendation. It used its own quill.",
+  "Major Squibb has built seven celebratory gadgets. All exploded. All intentional.",
+  'Captain Fnorb stirred briefly, murmured "still? remarkable," and sank back into sleep.',
+  "Vice Admiral Dweep is running out of forms. She has requested an emergency stationery resupply.",
+  'Brigadier Fluffington III has promoted you to Honorary Hamster. "The highest rank," he confirmed.',
+];
+function getMilestoneMessage(n) {
+  if (MILESTONE_MESSAGES[n]) return MILESTONE_MESSAGES[n];
+  if (n > 2000 && n % 50 === 0) {
+    const idx = Math.floor((n - 2050) / 50) % MILESTONE_HERO_LOOP.length;
+    return MILESTONE_HERO_LOOP[idx];
+  }
+  return null;
+}
+let totalWordsEver = getTotalWordsCookie();
+document.getElementById('totalWordsCount').textContent = totalWordsEver;
 let collection = [];
 let isAnimating = false;
 let gameTimers = [];
@@ -1432,6 +1494,9 @@ function handleKey(e) {
           }
         } else {
           // Real word complete - reveal it, then ask for space (no milestone check here)
+          totalWordsEver++;
+          saveTotalWordsCookie(totalWordsEver);
+          document.getElementById('totalWordsCount').textContent = totalWordsEver;
           isAnimating = true;
           gameTimeout(() => { revealWord(); }, 200);
           gameTimeout(() => { isAnimating = false; nextWord(true); }, 1600);
@@ -1546,9 +1611,12 @@ function showStory() {
     const wordLine = gameMode === 'word'
       ? `<div class="end-stat">📖 A ${adj} <span>${wordsCompleted}</span> words typed!</div>`
       : `<div class="end-stat">🕳️ <span>${swallowed}</span> things swallowed</div>`;
+    const milestoneMsg = getMilestoneMessage(totalWordsEver);
+    const milestoneLine = milestoneMsg ? `<div class="end-stat" style="font-style:italic;font-size:1rem;color:var(--blue)">${milestoneMsg}</div>` : '';
     stats.innerHTML = `
       ${wordLine}
       <div class="end-stat">🔥 Best streak: <span>${bestStreak}</span> in a row</div>
+      ${milestoneLine}
     `;
     container.appendChild(stats);
   }
