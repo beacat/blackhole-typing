@@ -716,6 +716,7 @@ for (let i = 0; i < 120; i++) {
 
 // ── STORY DATA ─────────────────────────────────────────────────
 function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function cap(s) { return s ? s[0].toUpperCase() + s.slice(1) : s; }
 
 // ── SOUND EFFECT GENERATOR ──────────────────────────────────────
 const SFX_SYLLABLES = ['BZZZT','BEEP','BLOOP','KRRZT','BWONK','PING','ZORP','WUMP','KLONG','FZZP','BLIP','VRRT','DINK','CLONK','SQUEE','BONK','ZZZP','FWIP','THWONK','KRBZT','PLONK','TWINK','BZORP','WUBWUB','KRZZZT'];
@@ -732,14 +733,13 @@ function makeSfx() {
 
 // ── PLANET NAME GENERATOR ───────────────────────────────────────
 const PLANET_PREFIXES  = ['Splunge','Blorb','Quaff','Zumble','Frobnik','Gleep','Snorft','Wumbus','Drebb','Frumple','Glorbex','Zizzle','Plibble','Krumf','Voffle','Snudge','Pworp','Glorb','Dweezle','Narbul','Quibble','Thrumpt','Sploosh','Flonk','Wobbit','Grumf','Blonket','Zumf','Yorblex'];
-const PLANET_SUFFIXES  = ['','oid','-9','-Prime',' Minor',' Major',' IV',' VII',' IX',' Classic',' (the damp one)',' (the slightly damp one)',' (the extremely damp one)',' (do not visit)',' (smells fine)',' (mostly harmless)',' B',' Alpha',' 2000',' Deluxe'];
 const PLANET_ADJECTIVES = ['Wobbly','Forgotten','Extremely Damp','Suspiciously Quiet','Slightly Oval','Formerly Exploded','Rather Flat','Upside-Down','Surprisingly Large','Very Small','Officially Haunted','Under New Management'];
 const PLANET_NOUNS      = ['Cheese','Trousers','Naps','Soup','Hats','Biscuits','Regret','Enthusiasm','Fog','Socks','Furniture','Pudding','Mud','Silence','Buttons'];
 function planetName() {
   const style = pick([0,0,0,1,2]);
   if (style === 1) return `the ${pick(PLANET_ADJECTIVES)} Planet`;
   if (style === 2) return `the Planet of ${pick(PLANET_NOUNS)}`;
-  return 'Planet ' + pick(PLANET_PREFIXES) + pick(PLANET_SUFFIXES);
+  return 'Planet ' + pick(PLANET_PREFIXES);
 }
 
 // ── COLOUR GENERATOR ────────────────────────────────────────────
@@ -1043,20 +1043,20 @@ const CHUNK_TEMPLATES = [
   ],
   [
     (he) => `Just then, ${he.entrance}. "${he.offer}," said ${he.prose || he.name}. "${he.condition}."`,
-    (he) => `At that very moment, ${he.entrance}. ${he.prose || he.name} looked around at everyone. "${he.offer}. ${he.condition}."`,
+    (he) => `At that very moment, ${he.entrance}. ${cap(he.prose || he.name)} looked around at everyone. "${he.offer}. ${he.condition}."`,
     (he) => `Without warning, ${he.entrance}. "Allow me," said ${he.prose || he.name}. "${he.offer}. Although, ${he.condition}."`,
     (he) => `The situation seemed hopeless. Then ${he.entrance}. "${he.condition}," said ${he.prose || he.name} immediately. "But also: ${he.offer}."`,
   ],
   [
     (he,v,planet) => `${he.name} led them to ${planet}, where they came face to face with ${v.desc}. "${v.line}," ${v.attribution}.`,
     (he,v,planet) => `Following ${he.name}'s directions, they arrived at ${planet} to find ${v.desc}. There was a long silence. Then: "${v.line}," ${v.attribution}.`,
-    (he,v,planet) => `${planet} was not what anyone had imagined. There, waiting for them, was ${v.desc}. "${v.line}," ${v.attribution}.`,
+    (he,v,planet) => `${cap(planet)} was not what anyone had imagined. There, waiting for them, was ${v.desc}. "${v.line}," ${v.attribution}.`,
     (he,v,planet) => `The journey to ${planet} was uneventful. The arrival was not. They found ${v.desc}. "${v.line}," ${v.attribution}.`,
   ],
   [
     (h,p,r,day) => `${h.name} ${r.action}. ${p.thing} was ${p.state}, ${r.outcome}, and everyone agreed it had been the strangest ${day} in 400 years. ${r.helperCallback} ${h.gag}`,
-    (h,p,r,day) => `In the end, ${h.name} ${r.action}. ${p.thing} was ${p.state}. ${r.outcome}. ${r.helperCallback} It had been, without question, the strangest ${day} anyone could remember. ${h.gag}`,
-    (h,p,r,day) => `${h.name} ${r.action}. ${r.outcome}. ${p.thing} was ${p.state}. ${r.helperCallback} Nobody would ever entirely agree on what had happened, but they all agreed it had been quite a ${day}. ${h.gag}`,
+    (h,p,r,day) => `In the end, ${h.name} ${r.action}. ${p.thing} was ${p.state}. ${cap(r.outcome)}. ${r.helperCallback} It had been, without question, the strangest ${day} anyone could remember. ${h.gag}`,
+    (h,p,r,day) => `${h.name} ${r.action}. ${cap(r.outcome)}. ${p.thing} was ${p.state}. ${r.helperCallback} Nobody would ever entirely agree on what had happened, but they all agreed it had been quite a ${day}. ${h.gag}`,
     (h,p,r,day) => `The solution turned out to be simple: ${h.name} ${r.action}. ${p.thing} was ${p.state}, ${r.outcome}. ${r.helperCallback} And that was the strangest ${day} in living memory, which for some of the crew was a very long time. ${h.gag}`,
   ],
 ];
@@ -1081,8 +1081,8 @@ function buildStory(h, p, he, v, r) {
   const vResolved = { ...v, desc: resolve(v.desc), line: resolve(v.line).replace(/[.?!,]+$/, ''), attribution: resolve(v.attribution).replace(/[.?!,]+$/, '') };
   const heResolved = {
     ...he,
-    offer:     he.offer.replace('PLANETNAME', planet).replace(/[.?!,]+$/, ''),
-    condition: he.condition.replace('PLANETNAME', planet).replace(/[.?!,]+$/, ''),
+    offer:     he.offer.replace(/\. PLANETNAME/, '. ' + cap(planet)).replace('PLANETNAME', planet).replace(/[.?!,]+$/, ''),
+    condition: he.condition.replace(/\. PLANETNAME/, '. ' + cap(planet)).replace('PLANETNAME', planet).replace(/[.?!,]+$/, ''),
   };
   return [
     pick(CHUNK_TEMPLATES[0])(h, pResolved, sfx),
