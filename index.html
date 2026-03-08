@@ -8,10 +8,10 @@
   @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap');
 
   :root {
-    --bg: #0a0a1a;
-    --deep: #060612;
-    --card: #12122a;
-    --border: #2a2a5a;
+    --bg: #0d1b4b;
+    --deep: #071028;
+    --card: #152060;
+    --border: #2a3d8f;
     --yellow: #ffe066;
     --green: #66ffb2;
     --pink: #ff66c4;
@@ -37,17 +37,19 @@
   #starfield { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
   .star {
     position: absolute; border-radius: 50%; background: white;
+    box-shadow: 0 0 4px 1px rgba(255,255,255,0.6);
     animation: twinkle var(--d, 3s) infinite ease-in-out;
   }
   @keyframes twinkle {
-    0%,100% { opacity: 0.2; transform: scale(1); }
-    50% { opacity: 1; transform: scale(1.4); }
+    0%,100% { opacity: 0.6; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.5); }
   }
 
   .screen { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; padding: 20px; }
   .screen.hidden { display: none; }
 
   /* SETUP */
+  #setupScreen { justify-content: flex-start; padding-top: 40px; overflow-y: auto; }
   #setupScreen h1 {
     font-family: 'Fredoka One', cursive;
     font-size: clamp(2.5rem, 8vw, 5rem);
@@ -59,7 +61,7 @@
   #setupScreen .subtitle {
     color: var(--blue);
     font-size: clamp(1rem, 3vw, 1.4rem);
-    margin-bottom: 40px;
+    margin-bottom: 20px;
     font-weight: 600;
   }
   .setup-card {
@@ -98,9 +100,10 @@
     transform: scale(1.08);
   }
   .letter-btn.space-btn {
-    width: auto; padding: 0 24px;
+    width: auto; padding: 0 48px;
     font-size: 1rem; letter-spacing: 1px;
     margin-top: 8px;
+    flex-basis: 100%;
   }
   .kbd-spacebar {
     width: 180px;
@@ -136,7 +139,7 @@
     width: 100%; padding: 16px 24px;
     display: flex; align-items: center; justify-content: space-between;
     z-index: 20;
-    background: linear-gradient(to bottom, rgba(10,10,26,0.95), transparent);
+    background: linear-gradient(to bottom, rgba(4,8,31,0.97), transparent);
   }
   #backBtn {
     background: transparent; border: 2px solid var(--border);
@@ -157,15 +160,23 @@
 
   #gameArea {
     flex: 1; width: 100%;
-    display: flex; flex-direction: column;
+    display: flex; flex-direction: row;
     align-items: center; justify-content: center;
     position: relative; padding: 16px;
+    gap: 24px;
+  }
+
+  /* Centre column: target letter → black hole → keyboard */
+  #centreColumn {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 12px;
+    flex-shrink: 0;
   }
 
   #letterDisplay {
     position: relative;
-    display: flex; flex-direction: column; align-items: center; gap: 16px;
-    margin-bottom: 20px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    margin-bottom: 0;
   }
 
   /* ── BLACK HOLE ── */
@@ -234,11 +245,11 @@
   #spaceObject {
     position: absolute;
     font-family: 'Fredoka One', cursive;
-    font-size: 4.5rem;
+    font-size: 9rem;
     color: var(--yellow);
-    text-shadow: 0 0 24px rgba(255,224,102,0.9);
+    text-shadow: 0 0 32px rgba(255,224,102,0.9);
     z-index: 6;
-    top: -72px;
+    top: -110px;
     animation: objectFloat 2.5s ease-in-out infinite;
     transition: none;
     line-height: 1;
@@ -267,14 +278,7 @@
     pointer-events: none;
   }
 
-  #targetLetter {
-    font-family: 'Fredoka One', cursive;
-    font-size: clamp(5rem, 18vw, 8rem);
-    color: var(--yellow);
-    text-shadow: 0 0 40px rgba(255,224,102,0.6), 0 0 80px rgba(255,224,102,0.3);
-    line-height: 1;
-    animation: letterPop 0.4s cubic-bezier(0.34,1.56,0.64,1);
-  }
+  #targetLetter { display: none !important; }
   @keyframes letterPop { from{ transform: scale(0.3) rotate(-10deg); opacity:0; } to{ transform: scale(1) rotate(0); opacity:1; } }
   #hint { color: var(--dim); font-size: 1rem; font-weight: 600; }
 
@@ -302,7 +306,7 @@
 
   /* COLLECTION */
   #collectionArea {
-    width: min(680px, 95vw);
+    width: 100%;
     background: var(--card);
     border: 2px solid var(--border);
     border-radius: 20px;
@@ -315,7 +319,8 @@
     font-size: 1rem;
     margin-bottom: 8px;
   }
-  #collectionGrid { display: flex; flex-wrap: wrap; gap: 4px; min-height: 32px; }
+  #collectionGrid { display: flex; flex-wrap: wrap; gap: 0; min-height: 32px; align-items: baseline; }
+  .word-group { display: inline-flex; white-space: nowrap; }
   .collected-item {
     font-family: 'Fredoka One', cursive;
     font-size: 1.2rem;
@@ -329,8 +334,10 @@
   /* KEYBOARD */
   #kbdHint {
     display: flex; flex-direction: column; align-items: center; gap: 6px;
-    max-width: min(680px, 95vw);
-    margin-top: 10px;
+    margin-top: 0;
+    background: rgba(2,5,16,0.92);
+    border-radius: 16px;
+    padding: 12px 16px;
   }
   .kbd-row {
     display: flex; gap: 6px; justify-content: center;
@@ -356,35 +363,19 @@
   .kbd-key.wrong-flash   { background: var(--pink) !important; color: #1a0010 !important; border-color: var(--pink) !important; }
 
   #rightPanel {
-    display: contents;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 12px; flex: 1; min-width: 0; max-width: 340px;
   }
 
   /* ── LANDSCAPE ── */
   @media (orientation: landscape) {
-    #gameArea {
-      flex-direction: row;
-      align-items: center;
-      justify-content: center;
-      gap: 24px;
-      padding: 8px 16px;
-    }
-    #letterDisplay {
-      flex-shrink: 0;
-      margin-bottom: 0;
-      gap: 8px;
-    }
     #blackHoleWrap { width: 150px; height: 150px; }
     .bh-disc-outer { width: 142px; height: 42px; }
     .bh-disc-inner { width: 110px; height: 27px; }
     .bh-core       { width: 66px;  height: 66px; }
     #spaceObject   { font-size: 3.2rem; top: -56px; }
     #targetLetter  { font-size: clamp(3rem, 10vh, 5rem); }
-    #rightPanel {
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      gap: 10px; flex: 1; min-width: 0;
-    }
-    #kbdHint { margin-top: 0; }
     #collectionArea { width: 100%; margin-top: 0; padding: 10px 14px; }
     #collectionArea h3 { font-size: 0.85rem; margin-bottom: 6px; }
     .collected-item { font-size: 1rem; }
@@ -458,20 +449,115 @@
   .congrats-btn:hover { transform: scale(1.05); }
   .congrats-btn.primary { background: linear-gradient(135deg, var(--yellow), var(--orange)); color: #1a0a00; }
   .congrats-btn.secondary { background: var(--deep); border: 2px solid var(--border); color: var(--text); }
+
+  /* RESTART BUTTON */
+  #restartBtn {
+    background: transparent; border: 2px solid var(--border);
+    color: var(--dim); border-radius: 12px; padding: 8px 16px;
+    font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.9rem;
+    cursor: pointer; transition: all 0.15s;
+  }
+  #restartBtn:hover { border-color: var(--pink); color: var(--pink); }
+
+  /* CONFIRM MODAL */
+  #confirmModal {
+    position: fixed; inset: 0; z-index: 300;
+    background: rgba(2,5,16,0.88);
+    display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(10px);
+    padding: 20px;
+  }
+  #confirmModal.hidden { display: none; }
+  .confirm-card {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: 24px;
+    padding: 32px 36px;
+    width: min(420px, 95vw);
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+    text-align: center;
+  }
+  .confirm-card .confirm-icon { font-size: 3rem; }
+  .confirm-card h2 {
+    font-family: 'Fredoka One', cursive;
+    color: var(--yellow); font-size: 1.6rem; margin: 0;
+  }
+  .confirm-card p {
+    color: var(--blue); font-size: 1rem; font-weight: 600; line-height: 1.5; margin: 0;
+  }
+  .confirm-card p em { color: var(--pink); font-style: normal; }
+  .confirm-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 4px; }
+  .confirm-btn {
+    padding: 12px 28px; border-radius: 50px; border: none;
+    font-family: 'Fredoka One', cursive; font-size: 1.1rem;
+    cursor: pointer; transition: transform 0.1s;
+  }
+  .confirm-btn:hover { transform: scale(1.05); }
+  .confirm-btn.danger { background: linear-gradient(135deg, var(--pink), #cc0066); color: #fff; }
+  .confirm-btn.safe   { background: var(--deep); border: 2px solid var(--border); color: var(--text); }
+
+  /* MODE TOGGLE */
+  .mode-btn {
+    padding: 14px 32px; border-radius: 50px;
+    font-family: 'Fredoka One', cursive; font-size: 1.3rem;
+    cursor: pointer; transition: all 0.15s;
+    border: 3px solid var(--border);
+    background: var(--deep); color: var(--dim);
+    margin: 4px;
+  }
+  .mode-btn.active {
+    background: linear-gradient(135deg, var(--purple), var(--blue));
+    color: #fff; border-color: transparent;
+    box-shadow: 0 4px 20px rgba(102,136,255,0.4);
+  }
+  .mode-btn:not(.active):hover { border-color: var(--purple); color: var(--purple); }
+
+  /* WORD MODE — pending letters in collector */
+  .collected-item.pending { visibility: hidden; width: 0; overflow: hidden; }
+
+  /* Word reveal banner */
+  #wordReveal {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
+    z-index: 150; pointer-events: none;
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(2rem, 8vw, 3.5rem);
+    color: var(--green);
+    text-shadow: 0 0 40px rgba(102,255,178,0.9), 0 0 80px rgba(102,255,178,0.4);
+    white-space: nowrap;
+    transition: none;
+  }
+  @keyframes wordPop {
+    0%   { transform: translate(-50%,-50%) scale(0) rotate(-6deg); opacity: 0; }
+    40%  { transform: translate(-50%,-50%) scale(1.15) rotate(2deg); opacity: 1; }
+    70%  { transform: translate(-50%,-50%) scale(0.95) rotate(0deg); opacity: 1; }
+    100% { transform: translate(-50%,-50%) scale(1) rotate(0deg);   opacity: 0; }
+  }
+  .word-popping { animation: wordPop 1.4s cubic-bezier(0.34,1.56,0.64,1) forwards; }
 </style>
 </head>
 <body>
 
 <div id="starfield"></div>
+<div id="wordReveal"></div>
 
 <!-- SETUP SCREEN -->
 <div id="setupScreen" class="screen">
   <h1>🕳️ Black Hole Typer</h1>
-  <p class="subtitle">Feed the black hole -- type the letter to swallow it! 🌟</p>
+  <p class="subtitle">Feed the black hole -- type to swallow it! 🌟</p>
 
-  <div class="setup-card">
+  <div style="display:flex;gap:8px;margin-bottom:20px;">
+    <button class="mode-btn active" id="btnLetterMode" onclick="setMode('letter')">🔤 Letters</button>
+    <button class="mode-btn" id="btnWordMode" onclick="setMode('word')">🌌 Words</button>
+  </div>
+
+  <div class="setup-card" id="letterModeCard">
     <h2>👆 Tap letters to remove them -- all on by default!</h2>
     <div id="letterGrid"></div>
+  </div>
+
+  <div class="setup-card" id="wordModeCard" style="display:none">
+    <h2>🌌 Space words appear letter by letter!</h2>
+    <p style="color:var(--blue);font-size:1rem;font-weight:600;line-height:1.6;margin-top:8px;">Type every letter the black hole asks for.<br>Watch the collector — you'll see what word you just spelled! ✨</p>
   </div>
 
   <button id="startBtn" onclick="startGame()">🚀 Let's Go!</button>
@@ -480,7 +566,7 @@
 <!-- GAME SCREEN -->
 <div id="gameScreen" class="screen hidden">
   <div id="gameHeader">
-    <button id="backBtn" onclick="goBack()">← Change Letters</button>
+    <button id="restartBtn" onclick="confirmRestart()">↺ Restart</button>
     <div id="scoreDisplay">
       <div class="score-pill swallowed">🕳️ <span id="swallowedCount">0</span>/50</div>
       <div class="score-pill streak">🔥 Streak: <span id="streakCount">0</span></div>
@@ -488,24 +574,23 @@
   </div>
 
   <div id="gameArea">
-    <div id="letterDisplay">
-
-      <!-- BLACK HOLE -->
-      <div id="blackHoleWrap">
-        <div class="bh-haze"></div>
-        <div class="bh-disc-outer"></div>
-        <div class="bh-disc-inner"></div>
-        <div class="bh-core"></div>
-        <div id="spaceObject">⭐</div>
+    <div id="centreColumn">
+      <div id="letterDisplay">
+        <div id="targetLetter">a</div>
+        <!-- BLACK HOLE -->
+        <div id="blackHoleWrap">
+          <div class="bh-haze"></div>
+          <div class="bh-disc-outer"></div>
+          <div class="bh-disc-inner"></div>
+          <div class="bh-core"></div>
+          <div id="spaceObject">⭐</div>
+        </div>
+        <div id="hint">Press this key to feed the black hole!</div>
       </div>
-
-      <div id="targetLetter" style="display:none">a</div>
-      <div id="hint" style="display:none">Press this key to feed the black hole!</div>
+      <div id="kbdHint"></div>
     </div>
 
     <div id="rightPanel">
-      <div id="kbdHint"></div>
-
       <div id="collectionArea">
         <h3>🕳️ Swallowed by the Black Hole (<span id="collectedCount">0</span>)</h3>
         <div id="collectionGrid"></div>
@@ -525,7 +610,20 @@
     <div class="story-chunks" id="storyChunks"></div>
     <div class="congrats-btns" id="storyModalBtns">
       <button class="congrats-btn primary" onclick="keepPlaying()">Keep Going! 🚀</button>
-      <button class="congrats-btn secondary" onclick="goBack()">Change Letters</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- CONFIRM RESTART MODAL -->
+<div id="confirmModal" class="hidden">
+  <div class="confirm-card">
+    <div class="confirm-icon">🕳️</div>
+    <h2>Restart the mission?</h2>
+    <p>The black hole will forget everything it swallowed.<br><em>Your story will be lost forever.</em></p>
+    <div class="confirm-btns">
+      <button class="confirm-btn safe" onclick="cancelRestart()">Keep Going!</button>
+      <button class="confirm-btn danger" onclick="doRestart()">Yes, restart</button>
     </div>
   </div>
 </div>
@@ -556,9 +654,9 @@ const PROBLEMS = [
 ];
 const HELPERS = [
   { entrance:'an extremely tiny spaceship landed on the dashboard, piloted by a hamster in a space helmet', name:'Brigadier Fluffington III', offer:'I know exactly what\'s going on', condition:'It will cost you seventeen sunflower seeds' },
-  { entrance:'a small robot zoomed in through the ventilation shaft, riding a space tortoise', name:'Pipwick', offer:'Have you considered that the answer might be on Planet Splunge?', condition:'Do you know how long it took me to find this tortoise?' },
+  { entrance:'a small robot zoomed in through the ventilation shaft, riding a space tortoise', name:'Pipwick', offer:'Have you considered that the answer might be on PLANETNAME?', condition:'Do you know how long it took me to find this tortoise?' },
   { entrance:'a tiny door opened in the wall and out stepped a robot the size of a grape', name:'Unit 00-BLIP', offer:'I have been monitoring this situation for some time. I know where you need to go', condition:'I am coming with you whether you like it or not' },
-  { entrance:'a battered old spaceship pulled alongside and a very old alien leaned out the window, wearing enormous sunglasses', name:'The Ancient One', offer:'Seen it before. You\'ll want Planet Splunge', condition:'Don\'t ask me how I know. I just know' }
+  { entrance:'a battered old spaceship pulled alongside and a very old alien leaned out the window, wearing enormous sunglasses', name:'The Ancient One', offer:'Seen it before. You\'ll want PLANETNAME', condition:'Don\'t ask me how I know. I just know' }
 ];
 const VILLAINS = [
   { desc:'a raccoon in a rocket suit, surrounded by an enormous pile of stolen goods', line:'Nobody ever gave me a birthday cake', attribution:'said the raccoon, looking both guilty and hopeful' },
@@ -577,22 +675,157 @@ const MILESTONES = [
   { count:10, badge:'🌟', title:'Space Explorer!',    subtitle:'The black hole swallowed 10 things -- and your story has begun!' },
   { count:20, badge:'🚀', title:'Rocket Typist!',     subtitle:'The plot thickens...' },
   { count:30, badge:'🪐', title:'Galaxy Master!',     subtitle:'A mysterious helper has arrived...' },
-  { count:40, badge:'👾', title:'Cosmic Wrangler!',   subtitle:'The adventure reaches Planet Splunge!' },
+  { count:40, badge:'👾', title:'Cosmic Wrangler!',   subtitle:'The adventure reaches a mysterious planet!' },
   { count:50, badge:'🌌', title:'Universe Champion!', subtitle:'The story is complete! What a legend.' }
 ];
 
 function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
+const PLANET_PREFIXES = ['Splunge','Blorb','Quaff','Zumble','Frobnik','Gleep','Snorft','Wumbus','Clonk','Drebb','Frumple','Glorbex','Zizzle','Bwonk','Plibble'];
+const PLANET_SUFFIXES = ['','oid','-9','-Prime',' Minor',' Major',' IV',' VII',' (the wet one)',' (the slightly damp one)',' Classic'];
+const WEEKDAYS = ['Tuesday','Wednesday','Thursday','Friday','a Saturday','a Sunday','Monday'];
+
+function planetName() {
+  return 'Planet ' + pick(PLANET_PREFIXES) + pick(PLANET_SUFFIXES);
+}
+function weekday() { return pick(WEEKDAYS); }
+
 function buildStory(h, p, he, v, r) {
   // Replace POS placeholder with hero's possessive pronoun
   const tool = p.tool.replace('POS', h.pos);
+  const planet = planetName();
+  const day = weekday();
+  const heOffer = he.offer.replace('PLANETNAME', planet);
   return [
     `${h.name} had ${h.trait}. ${h.opening} when the ship's computer ${h.sound}ed urgently: "${h.title}! ${p.announcement}!"`,
     `${p.clue} ${h.name} grabbed ${tool}, which ${p.toolFail}.`,
-    `Just then, ${he.entrance}. "${he.offer}," said ${he.name}. "${he.condition}."`,
-    `${he.name} led them to Planet Splunge, where they came face to face with ${v.desc}. "${v.line}," ${v.attribution}.`,
-    `${h.name} ${r.action}. ${p.thing} was ${p.state}, ${r.outcome} -- and everyone agreed it had been the strangest Tuesday in 400 years. ${h.gag}`
+    `Just then, ${he.entrance}. "${heOffer}," said ${he.name}. "${he.condition}."`,
+    `${he.name} led them to ${planet}, where they came face to face with ${v.desc}. "${v.line}," ${v.attribution}.`,
+    `${h.name} ${r.action}. ${p.thing} was ${p.state}, ${r.outcome} -- and everyone agreed it had been the strangest ${day} in 400 years. ${h.gag}`
   ];
+}
+
+
+// ── WORD MODE DATA ────────────────────────────────────────────
+let gameMode = 'letter'; // 'letter' | 'word'
+
+function setMode(m) {
+  gameMode = m;
+  document.getElementById('btnLetterMode').classList.toggle('active', m === 'letter');
+  document.getElementById('btnWordMode').classList.toggle('active', m === 'word');
+  document.getElementById('letterModeCard').style.display = m === 'letter' ? '' : 'none';
+  document.getElementById('wordModeCard').style.display   = m === 'word'   ? '' : 'none';
+}
+
+// Words by length — space-themed + story-flavoured
+const WORDS_BY_LEN = {
+  2: ['go','up','on','to','in','no'],
+  3: ['orb','sun','fly','jet','ion','ray','sky','arc','gas','fog','dim','aim','log','map','pod','aft','jam','hat','nap','lap'],
+  4: ['star','moon','beam','void','warp','dust','glow','crew','dark','ring','base','core','zone','spin','flux','blip','dock','fuel','halo','hull','mass','nova','deck','port','boop','beep','soup','flag','hats','clue','ping','ship'],
+  5: ['orbit','laser','probe','alien','black','quark','pilot','radar','craft','blast','flare','pulse','storm','trail','glows','solar','lunar','comet','cargo','cabin','dwarf','field','forge','light','range','scope','visor','bloop','bwonk','space','clonk','dance','heads','snore'],
+  6: ['cosmic','planet','rocket','nebula','galaxy','photon','pulsar','quasar','helmet','thrust','portal','meteor','signal','vortex','launch','oxygen','shield','tether','tunnel','sector','sensor','astral','beacon','bridge','colony','debris','engine','hazard','geyser','holdup','impact','intake','jolted','kelvin','lander','glorbf','zorzax','cheese','blobby','sneeze','kettle','potato'],
+  9: ['supernova','spaceship','moonlight','commander','telescope','navigator','blackhole','stardrift','lightyear','launchpad','cosmonaut','warpspeed','astronaut','interlock','propelled','stargazer','spacesuit','timewaves','brigadier','afternoon'],
+};
+
+// Pre-planned length groups that sum to exactly 10 chars+spaces per round
+// sum(len+1 for each word) === 10
+const LENGTH_GROUPS = [
+  [9],
+  [4,4], [3,5], [5,3],
+  [6,2], [2,6],
+  [3,2,2], [2,3,2], [2,2,3],
+];
+
+// Word mode state
+let wordQueue = [];
+let currentWord = '';
+let wordProgress = 0;
+let pendingSpans = [];
+let wordsCompleted = 0;
+
+function shuffleArray(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function pickWord(len) {
+  const pool = WORDS_BY_LEN[len] || WORDS_BY_LEN[4];
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function buildWordQueue() {
+  // Shuffle groups and build a queue of words that hits milestones exactly every 10 chars
+  const groups = shuffleArray(LENGTH_GROUPS.concat(LENGTH_GROUPS)); // double up for variety
+  const queue = [];
+  for (const group of groups) {
+    for (const len of group) {
+      queue.push(pickWord(len));
+    }
+    if (queue.length >= 30) break;
+  }
+  return queue;
+}
+
+function nextWord(addSpace = false) {
+  if (wordQueue.length === 0) wordQueue = buildWordQueue();
+  currentWord = addSpace ? ' ' : wordQueue.shift();
+  wordProgress = 0;
+  pendingSpans = [];
+
+  if (currentWord !== ' ') {
+    // Wrap all letter spans in a word-group so they never break mid-word
+    const grid = document.getElementById('collectionGrid');
+    const group = document.createElement('span');
+    group.className = 'word-group';
+    for (let i = 0; i < currentWord.length; i++) {
+      const span = document.createElement('span');
+      span.className = 'collected-item pending';
+      span.dataset.letter = currentWord[i];
+      span.textContent = currentWord[i];
+      group.appendChild(span);
+      pendingSpans.push(span);
+    }
+    grid.appendChild(group);
+  }
+
+  currentLetter = currentWord[0];
+  showCurrentLetter();
+}
+
+function showCurrentLetter() {
+  const obj = document.getElementById('spaceObject');
+  obj.innerHTML = currentLetter === ' '
+    ? '<span style="display:inline-block;border:4px solid rgba(255,224,102,0.9);border-radius:10px;padding:6px 28px;font-size:2.6rem;line-height:1.2;box-shadow:0 0 24px rgba(255,224,102,0.5);">space</span>'
+    : currentLetter;
+  obj.style.animation = 'none';
+  obj.classList.remove('sucking');
+  void obj.offsetWidth;
+  obj.style.animation = 'objectFloat 2.5s ease-in-out infinite';
+
+  document.querySelectorAll('.kbd-key').forEach(k => k.classList.remove('active-letter'));
+  const kEl = document.getElementById('key-' + currentLetter);
+  if (kEl) kEl.classList.add('active-letter');
+}
+
+function revealWord() {
+  wordsCompleted++;
+  for (let i = 0; i < pendingSpans.length; i++) {
+    pendingSpans[i].classList.remove('pending');
+    pendingSpans[i].style.color = 'var(--green)';
+    pendingSpans[i].style.textShadow = '0 0 10px rgba(102,255,178,0.6)';
+  }
+
+  const banner = document.getElementById('wordReveal');
+  banner.textContent = currentWord + '!';
+  banner.classList.remove('word-popping');
+  void banner.offsetWidth;
+  banner.classList.add('word-popping');
+
+  soundFanfare();
 }
 
 // ── STATE ──────────────────────────────────────────────────────
@@ -603,6 +836,7 @@ let streak = 0;
 let bestStreak = 0;
 let collection = [];
 let isAnimating = false;
+let gameTimers = [];
 let storyChunks = [];
 let chunksUnlocked = 0;
 
@@ -625,6 +859,8 @@ spaceBtn.className = 'letter-btn space-btn';
 spaceBtn.textContent = 'space';
 spaceBtn.dataset.letter = ' ';
 spaceBtn.onclick = () => toggleLetter(' ', spaceBtn);
+spaceBtn.classList.add('selected');
+selectedLetters.add(' ');
 grid.appendChild(spaceBtn);
 
 function toggleLetter(l, btn) {
@@ -679,7 +915,8 @@ function buildKeyboard() {
 
 // ── GAME START ─────────────────────────────────────────────────
 function startGame() {
-  swallowed = 0; streak = 0; bestStreak = 0; collection = []; chunksUnlocked = 0;
+  swallowed = 0; streak = 0; bestStreak = 0; collection = []; chunksUnlocked = 0; isAnimating = false;
+  wordQueue = []; currentWord = ''; wordProgress = 0; pendingSpans = []; wordsCompleted = 0;
   document.getElementById('swallowedCount').textContent = 0;
   document.getElementById('streakCount').textContent = 0;
   document.getElementById('collectionGrid').innerHTML = '';
@@ -688,11 +925,17 @@ function startGame() {
   document.getElementById('setupScreen').classList.add('hidden');
   document.getElementById('gameScreen').classList.remove('hidden');
   buildKeyboard();
-  nextLetter();
+  if (gameMode === 'word') {
+    wordQueue = buildWordQueue();
+    nextWord();
+  } else {
+    nextLetter();
+  }
   document.addEventListener('keydown', handleKey);
 }
 
 function goBack() {
+  gameTimers.forEach(clearTimeout); gameTimers = []; isAnimating = false;
   document.removeEventListener('keydown', handleKey);
   document.getElementById('gameScreen').classList.add('hidden');
   document.getElementById('storyModal').classList.add('hidden');
@@ -715,7 +958,7 @@ function nextLetter() {
 
   // Show letter (or space symbol) as the floating object above black hole
   const obj = document.getElementById('spaceObject');
-  obj.textContent = currentLetter === ' ' ? '⎵' : currentLetter;
+  obj.innerHTML = currentLetter === ' ' ? '<span style="display:inline-block;border:4px solid rgba(255,224,102,0.9);border-radius:10px;padding:6px 28px;font-size:2.6rem;line-height:1.2;box-shadow:0 0 24px rgba(255,224,102,0.5);">space</span>' : currentLetter;
   obj.style.animation = 'none';
   obj.classList.remove('sucking');
   void obj.offsetWidth;
@@ -725,6 +968,8 @@ function nextLetter() {
   const kEl = document.getElementById(`key-${currentLetter}`);
   if (kEl) kEl.classList.add('active-letter');
 }
+
+function gameTimeout(fn, ms) { const t = setTimeout(fn, ms); gameTimers.push(t); return t; }
 
 function handleKey(e) {
   if (isAnimating) return;
@@ -736,7 +981,7 @@ function handleKey(e) {
   const kEl = pressed === ' ' ? document.getElementById('key- ') : document.getElementById(`key-${pressed}`);
 
   if (pressed === currentLetter) {
-    isAnimating = true;
+    if (gameMode === 'letter') isAnimating = true;
     swallowed++;
     streak++;
     if (streak > bestStreak) bestStreak = streak;
@@ -763,21 +1008,64 @@ function handleKey(e) {
     setTimeout(() => ring.remove(), 600);
 
     // Add to collection
-    const item = currentLetter === ' ' ? '⎵' : currentLetter;
+    const item = currentLetter;
     collection.push(item);
     document.getElementById('collectedCount').textContent = collection.length;
-    const span = document.createElement('span');
-    span.className = 'collected-item';
-    span.textContent = item;
-    document.getElementById('collectionGrid').appendChild(span);
 
-    // Inward particles
-    spawnInwardParticles();
+    if (gameMode === 'word') {
+      // Show the just-typed letter immediately in yellow
+      if (pendingSpans[wordProgress]) {
+        pendingSpans[wordProgress].classList.remove('pending');
+        pendingSpans[wordProgress].style.color = 'var(--yellow)';
+      }
+      wordProgress++;
 
-    if (collection.length % 10 === 0 && collection.length <= 50) {
-      setTimeout(() => { isAnimating = false; showStory(); }, 700);
+      const wordDone = wordProgress >= currentWord.length;
+
+      spawnInwardParticles();
+
+      if (wordDone) {
+        if (currentWord === ' ') {
+          // Space typed - add a space to the grid, THEN check milestone
+          const spaceSpan = document.createElement('span');
+          spaceSpan.className = 'collected-item';
+          spaceSpan.style.display = 'inline-block';
+          spaceSpan.style.width = '0.4em';
+          document.getElementById('collectionGrid').appendChild(spaceSpan);
+          isAnimating = true;
+          if (collection.length % 10 === 0 && collection.length <= 50) {
+            gameTimeout(() => { isAnimating = false; showStory(); }, 700);
+          } else {
+            gameTimeout(() => { isAnimating = false; nextWord(false); }, 400);
+          }
+        } else {
+          // Real word complete - reveal it, then ask for space (no milestone check here)
+          isAnimating = true;
+          gameTimeout(() => { revealWord(); }, 200);
+          gameTimeout(() => { isAnimating = false; nextWord(true); }, 1600);
+        }
+      } else {
+        // Advance to next letter in word
+        currentLetter = currentWord[wordProgress];
+        if (collection.length % 10 === 0 && collection.length <= 50) {
+          gameTimeout(() => { isAnimating = false; showStory(); }, 700);
+        } else {
+          showCurrentLetter();
+        }
+      }
     } else {
-      setTimeout(() => { isAnimating = false; nextLetter(); }, 700);
+      const span = document.createElement('span');
+      span.className = 'collected-item';
+      span.textContent = item;
+      document.getElementById('collectionGrid').appendChild(span);
+
+      spawnInwardParticles();
+
+      if (collection.length % 10 === 0 && collection.length <= 50) {
+        gameTimeout(() => { isAnimating = false; showStory(); }, 700);
+      } else {
+        gameTimeout(() => { isAnimating = false; nextLetter(); }, 700);
+      }
     }
 
   } else {
@@ -785,9 +1073,9 @@ function handleKey(e) {
     document.getElementById('streakCount').textContent = 0;
     if (kEl) { kEl.classList.add('wrong-flash'); setTimeout(() => kEl.classList.remove('wrong-flash'), 300); }
     soundWrong();
-    const tl = document.getElementById('targetLetter');
-    tl.classList.add('shake');
-    setTimeout(() => tl.classList.remove('shake'), 300);
+    const shakeEl = document.getElementById('spaceObject');
+    shakeEl.classList.add('shake');
+    setTimeout(() => shakeEl.classList.remove('shake'), 300);
   }
 }
 
@@ -861,8 +1149,13 @@ function showStory() {
   if (isFinished) {
     const stats = document.createElement('div');
     stats.className = 'end-stats';
+    const funAdj = ['whopping','stellar','cosmic','galactic','astronomical','gravity-defying','supernova','meteoric','out-of-this-world','warp-speed'];
+    const adj = funAdj[Math.floor(Math.random() * funAdj.length)];
+    const wordLine = gameMode === 'word'
+      ? `<div class="end-stat">📖 A ${adj} <span>${wordsCompleted}</span> words typed!</div>`
+      : `<div class="end-stat">🕳️ <span>${swallowed}</span> things swallowed</div>`;
     stats.innerHTML = `
-      <div class="end-stat">🕳️ <span>${swallowed}</span> things swallowed</div>
+      ${wordLine}
       <div class="end-stat">🔥 Best streak: <span>${bestStreak}</span> in a row</div>
     `;
     container.appendChild(stats);
@@ -883,11 +1176,6 @@ function showStory() {
     keep.textContent = 'Keep Going! 🚀';
     keep.onclick = keepPlaying;
     btns.appendChild(keep);
-    const change = document.createElement('button');
-    change.className = 'congrats-btn secondary';
-    change.textContent = 'Change Letters';
-    change.onclick = goBack;
-    btns.appendChild(change);
   }
 
   setTimeout(() => {
@@ -901,7 +1189,14 @@ function showStory() {
 
 function keepPlaying() {
   document.getElementById('storyModal').classList.add('hidden');
-  nextLetter();
+  if (gameMode === 'word') {
+    const spaceSpan = document.createElement('span');
+    spaceSpan.className = 'collected-item';
+    spaceSpan.style.display = 'inline-block';
+    spaceSpan.style.width = '0.4em';
+    document.getElementById('collectionGrid').appendChild(spaceSpan);
+    nextWord();
+  } else { nextLetter(); }
 }
 
 // ── SOUND ──────────────────────────────────────────────────────
@@ -1027,6 +1322,22 @@ function soundFanfare() {
   }
 }
 
+
+// ── RESTART ────────────────────────────────────────────────────
+function confirmRestart() {
+  document.getElementById('confirmModal').classList.remove('hidden');
+}
+function cancelRestart() {
+  document.getElementById('confirmModal').classList.add('hidden');
+}
+function doRestart() {
+  gameTimers.forEach(clearTimeout); gameTimers = []; isAnimating = false;
+  document.getElementById('confirmModal').classList.add('hidden');
+  document.removeEventListener('keydown', handleKey);
+  document.getElementById('gameScreen').classList.add('hidden');
+  document.getElementById('storyModal').classList.add('hidden');
+  document.getElementById('setupScreen').classList.remove('hidden');
+}
 </script>
 </body>
 </html>
