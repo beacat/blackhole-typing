@@ -533,6 +533,64 @@
     100% { transform: translate(-50%,-50%) scale(1) rotate(0deg);   opacity: 0; }
   }
   .word-popping { animation: wordPop 1.4s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+
+  /* ── DEBUG PANEL ── */
+  #debugPanel {
+    position: fixed; inset: 0; z-index: 999;
+    background: #0a0a0a; color: #d0d0d0;
+    font-family: 'Nunito', sans-serif; font-size: 0.9rem;
+    overflow-y: auto; padding: 24px 32px;
+    display: none;
+  }
+  #debugPanel.visible { display: block; }
+  #debugPanel h1 {
+    font-family: 'Fredoka One', cursive;
+    color: #ffe066; font-size: 1.8rem; margin-bottom: 4px;
+  }
+  #debugPanel .debug-meta {
+    color: #666; font-size: 0.8rem; margin-bottom: 20px;
+  }
+  #debugPanel .debug-controls {
+    display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px;
+  }
+  #debugPanel .dbtn {
+    padding: 8px 20px; border-radius: 20px; border: 2px solid #333;
+    background: #1a1a1a; color: #aaa; font-family: 'Nunito', sans-serif;
+    font-size: 0.85rem; font-weight: 700; cursor: pointer;
+  }
+  #debugPanel .dbtn:hover { border-color: #ffe066; color: #ffe066; }
+  #debugPanel .dbtn.active { border-color: #66ffb2; color: #66ffb2; }
+  .debug-story {
+    background: #111; border: 1px solid #222;
+    border-radius: 12px; padding: 16px 20px; margin-bottom: 16px;
+  }
+  .debug-story .ds-header {
+    font-size: 0.75rem; color: #555; margin-bottom: 10px;
+    display: flex; gap: 16px; flex-wrap: wrap;
+  }
+  .debug-story .ds-header span { color: #888; }
+  .debug-chunk {
+    padding: 6px 0; border-bottom: 1px solid #1a1a1a;
+    line-height: 1.6;
+  }
+  .debug-chunk:last-child { border-bottom: none; }
+  .debug-chunk .chunk-n {
+    font-size: 0.7rem; color: #444; font-weight: 700;
+    display: inline-block; width: 24px;
+  }
+  .debug-error { color: #ff6666 !important; font-weight: 700; }
+  .debug-warn  { color: #ffaa44 !important; }
+  .debug-stats {
+    background: #111; border: 1px solid #333;
+    border-radius: 12px; padding: 16px 20px; margin-bottom: 24px;
+    display: flex; gap: 32px; flex-wrap: wrap;
+  }
+  .debug-stat { font-size: 0.85rem; }
+  .debug-stat strong { color: #ffe066; font-size: 1.1rem; }
+  .debug-close-hint {
+    position: fixed; top: 16px; right: 24px;
+    color: #444; font-size: 0.8rem; font-weight: 700;
+  }
 </style>
 </head>
 <body>
@@ -543,7 +601,7 @@
 <!-- SETUP SCREEN -->
 <div id="setupScreen" class="screen">
   <h1>🕳️ Black Hole Typer</h1>
-  <p class="subtitle">Feed the black hole -- type to swallow it! 🌟</p>
+  <p class="subtitle">Feed the black hole! Type to swallow it! 🌟</p>
 
   <div style="display:flex;gap:8px;margin-bottom:20px;">
     <button class="mode-btn active" id="btnLetterMode" onclick="setMode('letter')">🔤 Letters</button>
@@ -551,7 +609,7 @@
   </div>
 
   <div class="setup-card" id="letterModeCard">
-    <h2>👆 Tap letters to remove them -- all on by default!</h2>
+    <h2>👆 Tap letters to remove them. All on by default!</h2>
     <div id="letterGrid"></div>
   </div>
 
@@ -628,6 +686,22 @@
   </div>
 </div>
 
+<!-- DEBUG PANEL (Shift+D to toggle) -->
+<div id="debugPanel">
+  <div class="debug-close-hint">Shift+D to close</div>
+  <h1>🔬 Story Engine Debug</h1>
+  <div class="debug-meta" id="debugMeta"></div>
+  <div class="debug-controls">
+    <button class="dbtn" onclick="debugGenerate(20)">20 stories</button>
+    <button class="dbtn" onclick="debugGenerate(50)">50 stories</button>
+    <button class="dbtn" onclick="debugGenerate(200)">200 stories</button>
+    <button class="dbtn active" id="dbtnErrors" onclick="debugToggleErrors()">Highlight errors</button>
+    <button class="dbtn" onclick="debugWordsPanel()">Word list</button>
+  </div>
+  <div class="debug-stats" id="debugStats"></div>
+  <div id="debugOutput"></div>
+</div>
+
 <script>
 // ── STARFIELD ──────────────────────────────────────────────────
 const sf = document.getElementById('starfield');
@@ -640,68 +714,381 @@ for (let i = 0; i < 120; i++) {
 }
 
 // ── STORY DATA ─────────────────────────────────────────────────
-const HEROES = [
-  { name:'Admiral Glorbf',  subj:'He',  obj:'him', pos:'his',  trait:'been flying through space for 400 years and had never once found his keys', opening:'He was halfway through his afternoon nap',        sound:'BZZZT-PING',  title:'Admiral',   gag:'Glorbf still could not find his keys.' },
-  { name:'Commander Bloop', subj:'She', obj:'her', pos:'her',  trait:'the squishiest alien in the whole Blobby Galaxy, and very proud of it',      opening:'She was practising her squishing in the mirror', sound:'BEEP-BLOOP-BEEP', title:'Commander', gag:'Bloop celebrated by doing an enormous squelchy victory dance.' },
-  { name:'Captain Zorzax',  subj:'She', obj:'her', pos:'her',  trait:'three heads, seven elbows, and absolutely terrible taste in hats',           opening:'She was trying on her fourteenth hat of the morning', sound:'KRRZT-KRRZT', title:'Captain',   gag:'Zorzax immediately bought a celebratory hat, which was also terrible.' },
-  { name:'General Snorble', subj:'He',  obj:'him', pos:'his',  trait:'the loudest sneeze in the universe -- he once accidentally launched a satellite', opening:'He was trying very hard not to sneeze', sound:'BWONK-BWONK',  title:'General',   gag:'Snorble sneezed with relief, and three nearby asteroids changed course.' }
-];
-const PROBLEMS = [
-  { announcement:'Someone has stolen ALL the cheese', clue:'The thief had left behind only one clue: a tiny flag that said "WE TOOK THE CHEESE, HA HA."', tool:'POS Cheese Detector 3000', toolFail:'immediately fell off the wall with a sad CLONK', thing:'The cheese', state:'returned, slightly nibbled but otherwise fine' },
-  { announcement:'The moon has grown an enormous pair of eyebrows and is frowning', clue:'A scan revealed the eyebrows were made entirely of space jam, which explained the smell.', tool:'the Eyebrow Analysis Module', toolFail:'printed out a single piece of paper that just said "yep, jam" and then ran out of ink', thing:'The moon', state:'back to its normal expression, though slightly sticky' },
-  { announcement:'The ship\'s engine has been replaced with a very large potato', clue:'The potato had a small label on it reading "SORRY" in very tiny handwriting.', tool:'the Emergency Potato Scanner', toolFail:'beeped twice, said "it\'s definitely a potato," and went to sleep', thing:'The engine', state:'restored -- the potato was later made into a very filling soup' },
-  { announcement:'Every single button on the ship now makes a noise like a sad trombone', clue:'Someone had replaced all 247 button-sounds overnight, including the one for the kettle, which was now deeply upsetting.', tool:'the Button Noise Investigator (Mark IV)', toolFail:'played a sad trombone noise and then fell off the shelf', thing:'The buttons', state:'restored to normal, except the kettle button, which everyone quietly agreed sounded better now' }
-];
-const HELPERS = [
-  { entrance:'an extremely tiny spaceship landed on the dashboard, piloted by a hamster in a space helmet', name:'Brigadier Fluffington III', offer:'I know exactly what\'s going on', condition:'It will cost you seventeen sunflower seeds' },
-  { entrance:'a small robot zoomed in through the ventilation shaft, riding a space tortoise', name:'Pipwick', offer:'Have you considered that the answer might be on PLANETNAME?', condition:'Do you know how long it took me to find this tortoise?' },
-  { entrance:'a tiny door opened in the wall and out stepped a robot the size of a grape', name:'Unit 00-BLIP', offer:'I have been monitoring this situation for some time. I know where you need to go', condition:'I am coming with you whether you like it or not' },
-  { entrance:'a battered old spaceship pulled alongside and a very old alien leaned out the window, wearing enormous sunglasses', name:'The Ancient One', offer:'Seen it before. You\'ll want PLANETNAME', condition:'Don\'t ask me how I know. I just know' }
-];
-const VILLAINS = [
-  { desc:'a raccoon in a rocket suit, surrounded by an enormous pile of stolen goods', line:'Nobody ever gave me a birthday cake', attribution:'said the raccoon, looking both guilty and hopeful' },
-  { desc:'three robots standing in front of a large pile of things, all talking at once', line:'We completely forgot we were supposed to be guarding anything. We were discussing soup', attribution:'said all three robots in unison, which they found rather surprising' },
-  { desc:'an enormous teapot-shaped cloud wearing a small golden crown', line:'I just wanted someone to notice me. I have been floating here for eleven years', attribution:'said the cloud, in a voice like a foghorn full of feelings' },
-  { desc:'a very small snail in a tiny helmet, looking absolutely mortified', line:'I didn\'t mean to. I sat on some buttons. I\'ve been trying to fix it for weeks', attribution:'said the snail, in a voice barely above a whisper' }
-];
-const RESOLUTIONS = [
-  { action:'thought about this for a moment, then baked a magnificent birthday cake on the spot', outcome:'and everyone agreed that a cake fixes most things, which is usually true' },
-  { action:'put the kettle on (which played a sad trombone noise) and made everyone a large cup of tea', outcome:'and by the second cup everyone was feeling considerably better' },
-  { action:'paid the seventeen sunflower seeds, shook everyone\'s hand firmly, and declared the matter closed', outcome:'and Brigadier Fluffington III did a small celebratory lap of the ship on his tiny spaceship' },
-  { action:'felt a familiar tickle, held up one finger as a warning to everyone, and then sneezed with tremendous force', outcome:'and the sneeze was so powerful it shook everything back to exactly how it should be' }
-];
-
-const MILESTONES = [
-  { count:10, badge:'🌟', title:'Space Explorer!',    subtitle:'The black hole swallowed 10 things -- and your story has begun!' },
-  { count:20, badge:'🚀', title:'Rocket Typist!',     subtitle:'The plot thickens...' },
-  { count:30, badge:'🪐', title:'Galaxy Master!',     subtitle:'A mysterious helper has arrived...' },
-  { count:40, badge:'👾', title:'Cosmic Wrangler!',   subtitle:'The adventure reaches a mysterious planet!' },
-  { count:50, badge:'🌌', title:'Universe Champion!', subtitle:'The story is complete! What a legend.' }
-];
-
 function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
-const PLANET_PREFIXES = ['Splunge','Blorb','Quaff','Zumble','Frobnik','Gleep','Snorft','Wumbus','Clonk','Drebb','Frumple','Glorbex','Zizzle','Bwonk','Plibble'];
-const PLANET_SUFFIXES = ['','oid','-9','-Prime',' Minor',' Major',' IV',' VII',' (the wet one)',' (the slightly damp one)',' Classic'];
-const WEEKDAYS = ['Tuesday','Wednesday','Thursday','Friday','a Saturday','a Sunday','Monday'];
+// ── SOUND EFFECT GENERATOR ──────────────────────────────────────
+const SFX_SYLLABLES = ['BZZZT','BEEP','BLOOP','KRRZT','BWONK','PING','ZORP','WUMP','KLONG','FZZP','BLIP','VRRT','DINK','CLONK','SQUEE','BONK','ZZZP','FWIP','THWONK','KRBZT','PLONK','TWINK','BZORP','WUBWUB','KRZZZT'];
+function makeSfx() {
+  const count = pick([2, 2, 2, 3]);
+  const parts = [];
+  for (let i = 0; i < count; i++) {
+    let s;
+    do { s = pick(SFX_SYLLABLES); } while (parts.includes(s));
+    parts.push(s);
+  }
+  return parts.join('-');
+}
 
+// ── PLANET NAME GENERATOR ───────────────────────────────────────
+const PLANET_PREFIXES  = ['Splunge','Blorb','Quaff','Zumble','Frobnik','Gleep','Snorft','Wumbus','Drebb','Frumple','Glorbex','Zizzle','Plibble','Krumf','Voffle','Snudge','Pworp','Glorb','Dweezle','Narbul','Quibble','Thrumpt','Sploosh','Flonk','Wobbit','Grumf','Blonket','Zumf','Yorblex'];
+const PLANET_SUFFIXES  = ['','oid','-9','-Prime',' Minor',' Major',' IV',' VII',' IX',' Classic',' (the damp one)',' (the slightly damp one)',' (the extremely damp one)',' (do not visit)',' (smells fine)',' (mostly harmless)',' B',' Alpha',' 2000',' Deluxe'];
+const PLANET_ADJECTIVES = ['Wobbly','Forgotten','Extremely Damp','Suspiciously Quiet','Slightly Oval','Formerly Exploded','Rather Flat','Upside-Down','Surprisingly Large','Very Small','Officially Haunted','Under New Management'];
+const PLANET_NOUNS      = ['Cheese','Trousers','Naps','Soup','Hats','Biscuits','Regret','Enthusiasm','Fog','Socks','Furniture','Pudding','Mud','Silence','Buttons'];
 function planetName() {
+  const style = pick([0,0,0,1,2]);
+  if (style === 1) return `the ${pick(PLANET_ADJECTIVES)} Planet`;
+  if (style === 2) return `the Planet of ${pick(PLANET_NOUNS)}`;
   return 'Planet ' + pick(PLANET_PREFIXES) + pick(PLANET_SUFFIXES);
 }
-function weekday() { return pick(WEEKDAYS); }
+
+// ── COLOUR GENERATOR ────────────────────────────────────────────
+const PAINT_COLOURS = ['purple','orange','turquoise','pink','yellow','bright green','silver','red','sky blue','gold'];
+const PAINT_ADJECTIVES = ['cheerful','alarming','unexpected','extremely bright','rather loud','suspicious','dazzling','questionable','magnificent','very shiny'];
+const GAS_COLOURS = ['purple','orange','green','pink','blue','yellow','red','teal','silver','violet'];
+function paintColour() { return `${pick(PAINT_ADJECTIVES)} shade of ${pick(PAINT_COLOURS)}`; }
+function gasColour() { return pick(GAS_COLOURS); }
+
+const STOLEN_THINGS = ['cheese','biscuits','pudding','socks','buttons','soup','hats','cake','jam','crisps','toast','noodles','porridge','mittens'];
+let currentStolenThing = 'cheese';
+function newStolenThing() { currentStolenThing = pick(STOLEN_THINGS); return currentStolenThing; }
+
+
+const WEEKDAY_PHRASES = [
+  'Tuesday','Wednesday','Thursday','Friday','a Saturday','a Sunday','Monday',
+  'a particularly damp Wednesday','the kind of Thursday nobody asks about',
+  'a Friday that felt more like a Monday','a Tuesday that went on far too long',
+  'a Wednesday with entirely too many surprises','a Saturday that had no business being this exciting',
+  'the sort of Monday that ends up in history books','a Thursday nobody would ever forget, despite trying',
+  'an extremely unusual Tuesday','a weekend (the exact day was unclear)',
+  'whatever day it was (the clocks had been behaving strangely)'
+];
+function weekday() { return pick(WEEKDAY_PHRASES); }
+
+// ── HEROES ──────────────────────────────────────────────────────
+const HEROES = [
+  { name:'Admiral Glorbf',     subj:'He',   obj:'him',  pos:'his',   trait:'been flying through space for 400 years and had never once found his keys',            opening:'He was halfway through his afternoon nap',                              title:'Admiral',      gag:'Glorbf still could not find his keys.' },
+  { name:'Commander Bloop',    subj:'She',  obj:'her',  pos:'her',   trait:'the squishiest alien in the whole Blobby Galaxy, and very proud of it',                opening:'She was practising her squishing in the mirror',                        title:'Commander',    gag:'Bloop celebrated by doing an enormous squelchy victory dance.' },
+  { name:'Captain Zorzax',     subj:'She',  obj:'her',  pos:'her',   trait:'three heads, seven elbows, and absolutely terrible taste in hats',                    opening:'She was trying on her fourteenth hat of the morning',                   title:'Captain',      gag:'Zorzax immediately bought a celebratory hat, which was also terrible.' },
+  { name:'General Snorble',    subj:'He',   obj:'him',  pos:'his',   trait:'the loudest sneeze in the universe, so loud he once accidentally launched a satellite',  opening:'He was trying very hard not to sneeze',                                 title:'General',      gag:'Snorble sneezed with relief, and three nearby asteroids changed course.' },
+  { name:'Lieutenant Vrumf',   subj:'He',   obj:'him',  pos:'his',   trait:'seven arms and absolutely no idea what to do with most of them',                      opening:'He was reorganising his arms into a more comfortable arrangement',      title:'Lieutenant',   gag:'Vrumf waved all seven arms in celebration simultaneously, which caused minor chaos.' },
+  { name:'Ensign Plibwick',    subj:'She',  obj:'her',  pos:'her',   trait:'only been on the ship for three days but had already broken four things',              opening:'She was reading the manual for something she had already broken',       title:'Ensign',       gag:'Plibwick immediately broke the celebration button. It was fine.' },
+  { name:'Commodore Glonk',    subj:'He',   obj:'him',  pos:'his',   trait:"a magnificent moustache that had its own entry in the ship's crew manifest",          opening:'He was grooming his moustache, which took considerable time',          title:'Commodore',    gag:"Glonk's moustache twitched with satisfaction." },
+  { name:'Major Squibb',       subj:'She',  obj:'her',  pos:'her',   trait:'invented seventeen gadgets, none of which worked correctly, all of which exploded',   opening:'She was attempting to invent an eighteenth gadget',                    title:'Major',        gag:"Squibb's new gadget celebrated by exploding, which she said was intentional." },
+  { name:'Captain Fnorb',      subj:'They', obj:'them', pos:'their', trait:'the ability to fall asleep absolutely anywhere, including while standing up',          opening:'They were technically asleep but had learned to walk and sleep simultaneously', title:'Captain', gag:'Fnorb fell asleep immediately after, which everyone agreed was fair enough.' },
+  { name:'Vice Admiral Dweep', subj:'She',  obj:'her',  pos:'her',   trait:'memorised every regulation in the Galactic Handbook except the useful ones',          opening:'She was cross-referencing regulation 7,491 with regulation 7,492',     title:'Vice Admiral', gag:'Dweep immediately filed seventeen forms about the incident, in triplicate.' },
+];
+
+// ── PROBLEMS ────────────────────────────────────────────────────
+const PROBLEMS = [
+  { announcement:() => `Someone has stolen ALL the ${currentStolenThing}`,
+    clue:() => `The thief had left behind only one clue: a tiny flag that said "WE TOOK THE ${currentStolenThing.toUpperCase()}, HA HA."`,
+    escalation:() => `While they were investigating, someone stole the flag as well.`,
+    cliffhanger:() => `There was now no evidence, no ${currentStolenThing}, and an increasingly suspicious smell coming from the cargo bay.`,
+    tool:() => `POS ${currentStolenThing.charAt(0).toUpperCase()+currentStolenThing.slice(1)} Detector 3000`,
+    toolFail:'immediately fell off the wall with a sad CLONK',
+    thing:() => `The ${currentStolenThing}`, state:() => `returned, slightly nibbled but otherwise fine` },
+
+  { announcement:'The moon has grown an enormous pair of eyebrows and is frowning',
+    clue:'A scan revealed the eyebrows were made entirely of space jam, which explained the smell.',
+    escalation:'While they were scanning, the eyebrows started moving. The moon appeared to be raising them, which was worse.',
+    cliffhanger:'The moon was now frowning directly at the ship, and it was very hard to pretend this was not happening.',
+    tool:'the Eyebrow Analysis Module',
+    toolFail:'printed out a single piece of paper that said "yep, jam" and then ran out of ink',
+    thing:'The moon', state:'back to its normal expression, though slightly sticky' },
+
+  { announcement:"The ship's engine has been replaced with a very large potato",
+    clue:'The potato had a small label on it reading "SORRY" in very tiny handwriting.',
+    escalation:'The potato was actually working surprisingly well, which raised a number of questions nobody wanted answered.',
+    cliffhanger:'The engine was running fine, the potato was getting larger, and the label now also said "YOU ARE WELCOME."',
+    tool:'the Emergency Potato Scanner',
+    toolFail:"beeped twice, said \"it's definitely a potato,\" and went to sleep",
+    thing:'The engine', state:'restored. The potato was later made into a very filling soup' },
+
+  { announcement:'Every single button on the ship now makes a noise like a sad trombone',
+    clue:'Someone had replaced all 247 button-sounds overnight, including the one for the kettle, which was now deeply upsetting.',
+    escalation:'In trying to fix it, they pressed seventeen buttons. The ship was now full of sad trombone noises, layered on top of each other.',
+    cliffhanger:'The trombones were getting sadder. Nobody could agree on whether pressing more buttons would help, but several people were about to find out.',
+    tool:'the Button Noise Investigator (Mark IV)',
+    toolFail:'played a sad trombone noise and then fell off the shelf',
+    thing:'The buttons', state:'restored to normal, except the kettle button, which everyone quietly agreed sounded better now' },
+
+  { announcement:"All the chairs have been replaced with slightly smaller chairs",
+    clue:"A note had been left that read \"YOU\'LL NOTICE EVENTUALLY.\" They had.",
+    escalation:"While they were measuring the chairs, all the tables were replaced with slightly larger tables. The note on those said \"NOW YOU'RE NOTICING.\"",
+    cliffhanger:'The furniture was changing faster than they could track it, and the latest note simply said "KEEP WATCHING."',
+    tool:'POS Official Chair Measurement Device',
+    toolFail:'confirmed the chairs were smaller and then refused to say anything else',
+    thing:'The chairs', state:'replaced with the correct size, though everyone now felt oddly tall' },
+
+  { announcement:"The ship's autopilot has set a course for somewhere called \"The Big Smell\"",
+    clue:"Nobody had programmed this. The autopilot, when asked, simply replied \"trust me.\"",
+    escalation:'The autopilot had now also locked the navigation controls, changed the destination font to something very dramatic, and added a countdown.',
+    cliffhanger:'They had four hours to reach The Big Smell, the autopilot was extremely confident about this, and nobody knew what a Big Smell actually was.',
+    tool:'the Navigation Override Console',
+    toolFail:'displayed a loading screen that had been loading for six hours',
+    thing:'The navigation', state:'corrected. Nobody ever found out what The Big Smell was, and everyone agreed this was probably for the best' },
+
+  { announcement:() => `Someone has painted all the windows a ${paintColour()}`,
+    clue:"There was paint on everything, including the ship's cat, who looked surprisingly pleased with itself.",
+    escalation:'Someone had continued painting while they investigated. The floors were now done as well. The cat appeared to have a brush.',
+    cliffhanger:'Half the ship was painted and whoever was doing it was getting faster. The cat had paint on its paws and an extremely innocent expression.',
+    tool:'POS Paint Origin Analyser',
+    toolFail:'got paint on itself and had to be decommissioned',
+    thing:'The windows', state:'cleaned, though a faint tint remained that most people came to enjoy' },
+
+  { announcement:"The ship's coffee machine has started producing soup instead of coffee",
+    clue:'The soup was actually quite good, which made it worse somehow.',
+    escalation:'The soup machine had now also converted the drinking fountains. The ship was producing an enormous amount of soup.',
+    cliffhanger:'Soup was coming from places that had never had anything to do with soup, and the machine showed no signs of stopping.',
+    tool:'the Beverage Diagnostic Unit',
+    toolFail:'produced soup, took a moment to consider this, and then produced more soup',
+    thing:'The coffee machine', state:'restored. The soup recipe was saved and became a firm favourite' },
+
+  { announcement:"A distress signal is coming from inside the ship, from a room nobody knew existed",
+    clue:'The room had apparently always been there. It contained one chair, one lamp, and a very old biscuit.',
+    escalation:'While they were investigating the first room, two more unknown rooms were discovered. One contained a second biscuit. One contained a note saying "KEEP LOOKING."',
+    cliffhanger:'The ship appeared to be considerably larger on the inside than anyone had measured, and the biscuits were getting fresher.',
+    tool:'the Internal Room Detection Scanner',
+    toolFail:'discovered four more rooms nobody knew about and then went into shock',
+    thing:'The mysterious room', state:'catalogued and turned into a nice little reading nook' },
+
+  { announcement:"The ship's clock is running backwards, and has been for three days",
+    clue:'Nobody had noticed for three days because everything had been going suspiciously smoothly.',
+    escalation:'A check of the logs revealed that several things had happened in the wrong order, including a meeting that had apparently taken place before it was called.',
+    cliffhanger:'Time was running backwards, something had already happened that had not happened yet, and there was a cup of tea on the table that nobody had made.',
+    tool:'POS Temporal Calibration Wrench',
+    toolFail:'began running backwards as well, which at least was consistent',
+    thing:'The clock', state:'corrected. It turned out three days of backwards time cancelled out fairly neatly' },
+
+  { announcement:"The ship's gravity has started working sideways",
+    clue:"Everything was now stuck to the walls, which would have been fine, except for the soup.",
+    escalation:'Gravity then switched to pointing upwards, which unstuck everything from the walls and sent it all to the ceiling in one go.',
+    cliffhanger:'Gravity was now changing direction every few minutes, everyone was holding on to something, and the soup was everywhere.',
+    tool:'the Gravitational Orientation Gauge',
+    toolFail:'immediately slid sideways off the desk and kept going',
+    thing:'The gravity', state:'restored, though several mugs were never quite the same' },
+
+  { announcement:"Every single shoe on the ship has disappeared overnight",
+    clue:"A small handwritten note had appeared in each shoe's place, reading \"COMFY.\"",
+    escalation:'The socks had now gone too. Another note said "EVEN BETTER."',
+    cliffhanger:'Whatever was taking things was working through the wardrobe systematically, the notes were getting cheerier, and nobody had any idea what was going to go next.',
+    tool:'the Footwear Tracking Module',
+    toolFail:'reported seventeen shoes on the moon and then crashed',
+    thing:'The shoes', state:'returned, though two were on the wrong feet, which were also the wrong people' },
+
+  { announcement:"Every surface on the ship has become slightly but undeniably sticky",
+    clue:"Nobody could explain it. The ship's log simply said \"sticky\" forty-seven times.",
+    escalation:'Things were now sticking to other things and forming unexpected combinations. A mug had acquired a spoon, a book, and one boot.',
+    cliffhanger:"The stickiness was increasing, objects were accumulating into strange clusters, and the ship's log now just said \"very sticky\" on repeat.",
+    tool:'the Surface Adhesion Analyser',
+    toolFail:'got stuck to the ceiling',
+    thing:'The stickiness', state:'gone, mostly. The ceiling remained suspicious' },
+
+  { announcement:"The ship's tannoy has started playing the same cheerful tune on a loop and cannot be stopped",
+    clue:'The tune was quite catchy, which made it considerably worse.',
+    escalation:'Three crew members had started humming along without realising. Two more were tapping their feet. The tune was spreading.',
+    cliffhanger:'Half the crew were now humming, the other half were trying very hard not to, and someone had started harmonising, which was a serious development.',
+    tool:'the Audio Override Console',
+    toolFail:'began humming the tune and could not stop',
+    thing:'The tannoy', state:'restored to normal, though three crew members were still humming the tune a week later' },
+
+  { announcement:"Every clock on the ship is showing a completely different time and none of them agree",
+    clue:'One clock insisted it was next Tuesday. Nobody wanted to think about what that meant.',
+    escalation:'The clocks were now changing faster. One was showing a time that did not exist. Another had added a new hour nobody had heard of.',
+    cliffhanger:'The clocks were getting more confident, the new hour was spreading to other clocks, and it was unclear whether they were measuring time or inventing it.',
+    tool:'the Chronological Calibration Device',
+    toolFail:'displayed seven different times simultaneously and gave up',
+    thing:'The clocks', state:'synchronised, though everyone agreed to pretend the Tuesday clock had never existed' },
+
+  { announcement:'All the doors on the ship have started saying "no thank you" when anyone tries to open them',
+    clue:'The doors were very polite about it, which somehow made it worse.',
+    escalation:'The doors had begun making suggestions. "Have you tried the window?" said one. "I hear the other corridor is nice," said another.',
+    cliffhanger:'The doors were now holding conversations with each other, several crew members were stuck in rooms, and one door had started giving directions to somewhere that did not exist.',
+    tool:'the Door Compliance Interface',
+    toolFail:'knocked, waited, and was also refused',
+    thing:'The doors', state:"back to opening normally, though they still occasionally said \"if you're sure\"" },
+
+  { announcement:"Something small and enthusiastic has made a nest in the ventilation system and will not leave",
+    clue:'It had dragged in seventeen socks, a fork, and what appeared to be a small flag.',
+    escalation:'It had now also acquired a torch, three spoons, and appeared to be building something. The blueprints, drawn in crayon on the wall of the vent, were worryingly detailed.',
+    cliffhanger:'The construction was progressing rapidly, the creature had a hard hat, and nobody could work out how it had obtained a small crane.',
+    tool:'the Vent Occupancy Scanner',
+    toolFail:'was immediately adopted by whatever was in the vent',
+    thing:'The ventilation', state:'cleared, though the creature was rehomed in a very comfortable box near the engine and given a name' },
+
+  { announcement:"There appear to be two identical copies of this ship, and the other one keeps waving",
+    clue:'The other ship had the same crew, the same markings, and was doing everything three seconds later, like an echo.',
+    escalation:'A third ship had appeared. It was waving too, but slightly differently, as if it had its own ideas about how waving should work.',
+    cliffhanger:'There were now three ships, they were all waving in slightly different ways, and the crew of the original ship were no longer entirely certain which one they were on.',
+    tool:'the Duplicate Vessel Identification Array',
+    toolFail:'produced an identical copy of itself, which was not helpful',
+    thing:'The duplicate ship', state:'gone, probably. Everyone agreed not to think too hard about where it went' },
+
+  { announcement:"A small moon has decided to follow the ship and is keeping up surprisingly well",
+    clue:'It had no business moving that fast. It seemed very pleased with itself.',
+    escalation:'Two more small moons had joined it. They appeared to be racing each other.',
+    cliffhanger:'There were now four moons in pursuit, they were getting faster, and the lead moon had developed what could only be described as a competitive attitude.',
+    tool:'the Celestial Object Behaviour Monitor',
+    toolFail:'the moon bumped it gently and it rolled under a console',
+    thing:'The moon', state:'persuaded to return to its orbit with the offer of a very large biscuit' },
+
+  { announcement:"Due to an unexplained stellar event, it has been Tuesday for the third day in a row",
+    clue:"The crew had eaten Tuesday's lunch four times. Some of them were starting to enjoy it.",
+    escalation:'Tuesday appeared to be getting longer. The afternoon had now lasted eleven hours and showed no intention of becoming evening.',
+    cliffhanger:'Tuesday was stretching, nobody could remember what Wednesday looked like, and the lunch menu was beginning to feel less like a choice and more like a permanent condition.',
+    tool:'the Temporal Continuity Wrench',
+    toolFail:"got stuck in a loop, produced Tuesday's error message twice, and stopped",
+    thing:'Tuesday', state:'resolved. Wednesday arrived, slightly late and looking embarrassed' },
+];
+
+// ── HELPERS ─────────────────────────────────────────────────────
+const HELPERS = [
+  { entrance:'an extremely tiny spaceship landed on the dashboard, piloted by a hamster in a space helmet',                        name:'Brigadier Fluffington III',      offer:"I know exactly what's going on",                                                          condition:'It will cost you seventeen sunflower seeds' },
+  { entrance:'a small robot zoomed in through the ventilation shaft, riding a space tortoise',                                     name:'Pipwick',                        offer:'Have you considered that the answer might be on PLANETNAME?',                          condition:'Do you know how long it took me to find this tortoise?' },
+  { entrance:'a tiny door opened in the wall and out stepped a robot the size of a grape',                                         name:'Unit 00-BLIP',                   offer:'I have been monitoring this situation for some time. I know where you need to go',    condition:'I am coming with you whether you like it or not' },
+  { entrance:'a battered old spaceship pulled alongside and a very old alien leaned out the window, wearing enormous sunglasses',  name:'The Ancient One',                prose:'the ancient one',               offer:"Seen it before. You'll want PLANETNAME",                                              condition:"Don't ask me how I know. I just know" },
+  { entrance:'a small envelope slid under the door, containing a card that said "I CAN HELP" and a small map',                    name:'Anonymous',       prose:'the anonymous sender',  offer:"PLANETNAME. That's all I can say",                                                     condition:"Please do not try to find out who I am. It's better this way" },
+  { entrance:"the ship's cat walked in carrying something in its mouth, dropped it on the floor, and sat down looking very pleased", name:"The Ship's Cat (via interpreter)", prose:"the ship's cat (via interpreter)", offer:'The answer is on PLANETNAME. The cat has known for weeks',                        condition:'The cat would like more biscuits. Non-negotiable' },
+  { entrance:'a balloon floated in through an open hatch with a note tied to it',                                                  name:'Unknown Balloon Person',         prose:'the unknown balloon person',            offer:'I cannot come in person but PLANETNAME is where you need to go',                      condition:"Please return the balloon when you're done. It's my only one" },
+  { entrance:'one of the walls slid open to reveal a small alien who had apparently been living there for some time',              name:'Wumble',                         offer:"I've been watching. PLANETNAME. Obviously.",                                          condition:"Could I get a cup of tea? I've been in that wall for ages" },
+  { entrance:'a hologram flickered to life, showing a very frazzled-looking scientist surrounded by floating equations',           name:'Dr. Frumple',                    offer:'My calculations point to PLANETNAME, assuming I haven\'t made errors, which I almost certainly have', condition:"If I'm wrong, please don't tell anyone" },
+  { entrance:'a very official letter materialized out of thin air, sealed with seven wax seals and marked EXTREMELY URGENT',      name:'The Galactic Bureau of Things',  prose:'the Galactic Bureau of Things',  offer:'Pursuant to regulation 4,012(b), the relevant location is PLANETNAME',              condition:'Please sign the enclosed 47 forms before proceeding' },
+];
+
+// ── VILLAINS ────────────────────────────────────────────────────
+const VILLAINS = [
+  { desc:'a raccoon in a rocket suit, surrounded by an enormous pile of stolen goods',                                line:'Nobody ever gave me a birthday cake',                                                                      attribution:'said the raccoon, looking both guilty and hopeful' },
+  { desc:'three robots standing in front of a large pile of things, all talking at once',                             line:"We completely forgot we were supposed to be guarding anything. We were discussing soup",                    attribution:'said all three robots in unison, which they found rather surprising' },
+  { desc:'an enormous teapot-shaped cloud wearing a small golden crown',                                              line:'I just wanted someone to notice me. I have been floating here for eleven years',                          attribution:'said the cloud, in a voice like a foghorn full of feelings' },
+  { desc:'a very small snail in a tiny helmet, looking absolutely mortified',                                         line:"I didn't mean to. I sat on some buttons. I've been trying to fix it for weeks",                          attribution:'said the snail, in a voice barely above a whisper' },
+  { desc:"a very tall penguin wearing an admiral's uniform two sizes too big",                                        line:'I found the uniform. I thought it looked official. I may have given some orders',                          attribution:'said the penguin, adjusting its hat with a flipper' },
+  { desc:'an extremely old vending machine that appeared to have developed opinions',                                  line:"I've been dispensing snacks for 200 years and nobody has once said thank you",                            attribution:'said the vending machine, in a voice full of vending-machine feelings' },
+  { desc:'a perfectly ordinary-looking rock that was, upon closer inspection, not ordinary at all',                   line:'I have been pretending to be a rock for so long I am not entirely sure who I am anymore',                attribution:'said the rock, or possibly the thing inside the rock' },
+  { desc:'twelve ferrets in a trenchcoat, attempting to pass as a single very tall alien',                            line:"We just wanted to come to the party. There wasn't a party, but we had heard there might be",              attribution:'said all twelve ferrets, not quite in unison' },
+  { desc:() => `a distinguished-looking cloud of ${gasColour()} gas wearing a tiny monocle`,                                        line:() => `I contain multitudes. Also some light nitrogen. Also your ${currentStolenThing}`,      attribution:'said the gas cloud, swirling meaningfully' },
+  { desc:'a small robot who had been sent to fix something six years ago and had simply never left',                  line:"I fixed the thing. Then I fixed some other things. Then I started moving things around to see what happened", attribution:'said the robot, gesturing at a room that had been comprehensively rearranged' },
+];
+
+// ── RESOLUTIONS ─────────────────────────────────────────────────
+const RESOLUTIONS = [
+  { action:'thought about this for a moment, then baked a magnificent birthday cake on the spot',
+    outcome:'and everyone agreed that a cake fixes most things, which is usually true',
+    helperCallback:'The helper accepted a large slice of cake, which they agreed was the correct payment for their trouble.' },
+  { action:'put the kettle on (which played a sad trombone noise) and made everyone a large cup of tea',
+    outcome:'and by the second cup everyone was feeling considerably better',
+    helperCallback:'The helper stayed for tea, declared it excellent, and asked for the recipe.' },
+  { action:"paid the seventeen sunflower seeds, shook everyone's hand firmly, and declared the matter closed",
+    outcome:'and Brigadier Fluffington III did a small celebratory lap of the ship on his tiny spaceship',
+    helperCallback:'The helper pocketed their fee, gave a small salute, and departed looking extremely satisfied.' },
+  { action:'felt a familiar tickle, held up one finger as a warning to everyone, and then sneezed with tremendous force',
+    outcome:'and the sneeze was so powerful it shook everything back to exactly how it should be',
+    helperCallback:'The helper, who had been standing at a safe distance, applauded and said they had always hoped to see that.' },
+  { action:"sat everyone down, made a very long speech about forgiveness, and then produced a surprisingly good sandwich",
+    outcome:"and nobody was entirely sure what had just happened, but the sandwich was excellent",
+    helperCallback:'The helper had a sandwich, nodded as if this all made perfect sense, and quietly slipped away.' },
+  { action:"declared that the whole thing had been a misunderstanding, shook hands all round, and organised a small parade",
+    outcome:"and the parade was only slightly chaotic, which for this crew was considered a triumph",
+    helperCallback:'The helper joined the parade, marched in the wrong direction, and seemed to consider this an improvement.' },
+  { action:"consulted the manual, found the relevant regulation, and then solved the problem by ignoring the manual entirely",
+    outcome:"and it worked, which the manual would never hear about",
+    helperCallback:'The helper borrowed the manual, said they had always wanted to read it, and left before anyone could ask why.' },
+  { action:'took a deep breath, said "I know exactly what to do," and then figured it out while saying it',
+    outcome:'and it turned out confidence was most of the solution, which is a useful thing to know',
+    helperCallback:'The helper nodded as if they had known this all along, which they possibly had.' },
+  { action:'offered everyone involved a very sincere apology, a cup of something warm, and exactly what they needed',
+    outcome:"and it turned out that what everyone needed was quite reasonable, once you asked",
+    helperCallback:'The helper accepted their cup of something warm, said "that is how you do it," and departed.' },
+  { action:"called a meeting, listed all the problems on a whiteboard, and then solved them in the wrong order by accident, which somehow worked out",
+    outcome:"and the whiteboard was framed and hung in the corridor as a reminder",
+    helperCallback:'The helper studied the whiteboard for a long time, then said "yes, that is definitely one way to do it."' },
+];
+
+// ── MILESTONES ──────────────────────────────────────────────────
+const MILESTONE_DATA = [
+  { count:10, badges:['🌟','⭐','✨','💫','🌠'], titles:['Space Explorer!','First Contact!','Orbit Achieved!','Houston, We Have Typing!','The Journey Begins!'],
+    subtitles:['The black hole has swallowed 10 things, and your story has begun!','A promising start. The universe is watching.','10 down. The black hole is warming up.','Your story has begun. It is already quite strange.','The first chapter is written. Things are about to get weirder.'] },
+  { count:20, badges:['🚀','🛸','🌙','🪐','🔭'], titles:['Rocket Typist!','Deep Space Achieved!','Plot Thickening...','20 Things Gone!','Second Chapter!'],
+    subtitles:['The plot thickens...','Something mysterious is happening. Keep going.','20 things swallowed and the story is getting interesting.',"A helper is somewhere out there. You'll meet them soon.",'The black hole grows stronger. So do you.'] },
+  { count:30, badges:['🪐','🌌','👽','🛰️','🔮'], titles:['Galaxy Master!','A Stranger Appears!','Thirty Down!','The Plot Deepens!','Mysterious Assistance!'],
+    subtitles:['A mysterious helper has arrived...','Just when things looked complicated, help appeared from an unexpected direction.','30 things swallowed! A new ally joins the story.',"The helper has arrived. Their methods are unclear. Their tortoise is real.",'Something is afoot. Or the alien equivalent of afoot.'] },
+  { count:40, badges:['👾','🌍','🏆','💥','🗺️'], titles:['Cosmic Wrangler!','Planet Reached!','Almost There!','The Confrontation!','Forty Things Swallowed!'],
+    subtitles:['The adventure reaches its destination!','You have arrived. What you found was not what anyone expected.','40 down! The final chapter begins!','The mystery is almost solved. Probably.','Whatever is on that planet, you\'re about to find out.'] },
+  { count:50, badges:['🌌','🏅','🎉','🥇','🎊'], titles:['Universe Champion!','Mission Complete!','Legend Status!','The Black Hole is Full!','Story Complete!'],
+    subtitles:['The story is complete! What a legend.','50 things swallowed. The universe will remember this day.','You did it. The black hole is satisfied. For now.',() => `Mission accomplished. The ${currentStolenThing} has been accounted for.`,'A champion. A hero. A very good typist.'] },
+];
+function buildMilestones() {
+  return MILESTONE_DATA.map(m => ({
+    count: m.count,
+    badge: pick(m.badges),
+    title: pick(m.titles),
+    subtitle: resolve(pick(m.subtitles)),
+  }));
+}
+let MILESTONES = buildMilestones();
+
+// ── STORY SENTENCE TEMPLATES ────────────────────────────────────
+const CHUNK_TEMPLATES = [
+  [
+    (h,p,sfx) => `${h.name} had ${h.trait}. ${h.opening} when the ship's computer ${sfx}ed urgently: "${h.title}! ${p.announcement}!"`,
+    (h,p,sfx) => `It had been a perfectly ordinary day for ${h.name}, who had ${h.trait}. ${h.opening} when the ship's computer made a noise like ${sfx} and announced: "${p.announcement}!"`,
+    (h,p,sfx) => `${h.opening}. This was normal for ${h.name}, who had ${h.trait}. Then the computer went ${sfx}. "${h.title}!" it said. "${p.announcement}!"`,
+    (h,p,sfx) => `The computer had been quiet all morning. ${h.name}, who had ${h.trait}, was enjoying this. Then: ${sfx}. "${h.title}! ${p.announcement}!"`,
+  ],
+  [
+    (h,p,tool) => `${p.clue} ${h.name} grabbed ${tool}, which ${p.toolFail}. ${p.escalation} ${p.cliffhanger}`,
+    (h,p,tool) => `${p.clue} "We'll use ${tool}," said ${h.name}, confidently. It ${p.toolFail}. ${p.escalation} ${p.cliffhanger}`,
+    (h,p,tool) => `${p.clue} ${h.subj} consulted ${tool} for answers. It ${p.toolFail}. ${p.escalation} ${p.cliffhanger}`,
+    (h,p,tool) => `${p.clue} ${h.name} produced ${tool} with a flourish. It ${p.toolFail}. ${p.escalation} ${p.cliffhanger}`,
+  ],
+  [
+    (he) => `Just then, ${he.entrance}. "${he.offer}," said ${he.prose || he.name}. "${he.condition}."`,
+    (he) => `At that very moment, ${he.entrance}. ${he.prose || he.name} looked around at everyone. "${he.offer}. ${he.condition}."`,
+    (he) => `Without warning, ${he.entrance}. "Allow me," said ${he.prose || he.name}. "${he.offer}. Although, ${he.condition}."`,
+    (he) => `The situation seemed hopeless. Then ${he.entrance}. "${he.condition}," said ${he.prose || he.name} immediately. "But also: ${he.offer}."`,
+  ],
+  [
+    (he,v,planet) => `${he.name} led them to ${planet}, where they came face to face with ${v.desc}. "${v.line}," ${v.attribution}.`,
+    (he,v,planet) => `Following ${he.name}'s directions, they arrived at ${planet} to find ${v.desc}. There was a long silence. Then: "${v.line}," ${v.attribution}.`,
+    (he,v,planet) => `${planet} was not what anyone had imagined. There, waiting for them, was ${v.desc}. "${v.line}," ${v.attribution}.`,
+    (he,v,planet) => `The journey to ${planet} was uneventful. The arrival was not. They found ${v.desc}. "${v.line}," ${v.attribution}.`,
+  ],
+  [
+    (h,p,r,day) => `${h.name} ${r.action}. ${p.thing} was ${p.state}, ${r.outcome}, and everyone agreed it had been the strangest ${day} in 400 years. ${r.helperCallback} ${h.gag}`,
+    (h,p,r,day) => `In the end, ${h.name} ${r.action}. ${p.thing} was ${p.state}. ${r.outcome}. ${r.helperCallback} It had been, without question, the strangest ${day} anyone could remember. ${h.gag}`,
+    (h,p,r,day) => `${h.name} ${r.action}. ${r.outcome}. ${p.thing} was ${p.state}. ${r.helperCallback} Nobody would ever entirely agree on what had happened, but they all agreed it had been quite a ${day}. ${h.gag}`,
+    (h,p,r,day) => `The solution turned out to be simple: ${h.name} ${r.action}. ${p.thing} was ${p.state}, ${r.outcome}. ${r.helperCallback} And that was the strangest ${day} in living memory, which for some of the crew was a very long time. ${h.gag}`,
+  ],
+];
+
+function resolve(val) { return typeof val === 'function' ? val() : val; }
 
 function buildStory(h, p, he, v, r) {
-  // Replace POS placeholder with hero's possessive pronoun
-  const tool = p.tool.replace('POS', h.pos);
+  newStolenThing();
+  const sfx  = makeSfx();
+  const tool = resolve(p.tool).replace('POS', h.pos);
   const planet = planetName();
-  const day = weekday();
-  const heOffer = he.offer.replace('PLANETNAME', planet);
+  const day    = weekday();
+  const pResolved = {
+    ...p,
+    announcement: resolve(p.announcement),
+    clue:         resolve(p.clue),
+    escalation:   resolve(p.escalation),
+    cliffhanger:  resolve(p.cliffhanger),
+    thing:        resolve(p.thing),
+    state:        resolve(p.state),
+  };
+  const vResolved = { ...v, desc: resolve(v.desc), line: resolve(v.line).replace(/[.?!,]+$/, ''), attribution: resolve(v.attribution).replace(/[.?!,]+$/, '') };
+  const heResolved = {
+    ...he,
+    offer:     he.offer.replace('PLANETNAME', planet).replace(/[.?!,]+$/, ''),
+    condition: he.condition.replace('PLANETNAME', planet).replace(/[.?!,]+$/, ''),
+  };
   return [
-    `${h.name} had ${h.trait}. ${h.opening} when the ship's computer ${h.sound}ed urgently: "${h.title}! ${p.announcement}!"`,
-    `${p.clue} ${h.name} grabbed ${tool}, which ${p.toolFail}.`,
-    `Just then, ${he.entrance}. "${heOffer}," said ${he.name}. "${he.condition}."`,
-    `${he.name} led them to ${planet}, where they came face to face with ${v.desc}. "${v.line}," ${v.attribution}.`,
-    `${h.name} ${r.action}. ${p.thing} was ${p.state}, ${r.outcome} -- and everyone agreed it had been the strangest ${day} in 400 years. ${h.gag}`
+    pick(CHUNK_TEMPLATES[0])(h, pResolved, sfx),
+    pick(CHUNK_TEMPLATES[1])(h, pResolved, tool),
+    pick(CHUNK_TEMPLATES[2])(heResolved),
+    pick(CHUNK_TEMPLATES[3])(heResolved, vResolved, planet),
+    pick(CHUNK_TEMPLATES[4])(h, pResolved, r, day),
   ];
 }
 
@@ -720,11 +1107,11 @@ function setMode(m) {
 // Words by length — space-themed + story-flavoured
 const WORDS_BY_LEN = {
   2: ['go','up','on','to','in','no'],
-  3: ['orb','sun','fly','jet','ion','ray','sky','arc','gas','fog','dim','aim','log','map','pod','aft','jam','hat','nap','lap'],
-  4: ['star','moon','beam','void','warp','dust','glow','crew','dark','ring','base','core','zone','spin','flux','blip','dock','fuel','halo','hull','mass','nova','deck','port','boop','beep','soup','flag','hats','clue','ping','ship'],
-  5: ['orbit','laser','probe','alien','black','quark','pilot','radar','craft','blast','flare','pulse','storm','trail','glows','solar','lunar','comet','cargo','cabin','dwarf','field','forge','light','range','scope','visor','bloop','bwonk','space','clonk','dance','heads','snore'],
-  6: ['cosmic','planet','rocket','nebula','galaxy','photon','pulsar','quasar','helmet','thrust','portal','meteor','signal','vortex','launch','oxygen','shield','tether','tunnel','sector','sensor','astral','beacon','bridge','colony','debris','engine','hazard','geyser','holdup','impact','intake','jolted','kelvin','lander','glorbf','zorzax','cheese','blobby','sneeze','kettle','potato'],
-  9: ['supernova','spaceship','moonlight','commander','telescope','navigator','blackhole','stardrift','lightyear','launchpad','cosmonaut','warpspeed','astronaut','interlock','propelled','stargazer','spacesuit','timewaves','brigadier','afternoon'],
+  3: ['orb','sun','fly','jet','ion','ray','sky','arc','gas','fog','dim','aim','log','map','pod','aft','jam','hat','nap','lap','mud','nod','key','cat','ink','bit','bot','bug','bus','cog','dot','lab','led','net','ram','zap','zip','hex','gel'],
+  4: ['star','moon','beam','void','warp','dust','glow','crew','dark','ring','base','core','zone','spin','flux','blip','dock','fuel','halo','hull','mass','nova','deck','port','boop','beep','soup','flag','hats','clue','ping','ship','cake','keys','nook','coat','snag','ramp','atom','bolt','byte','chip','coil','cord','data','dial','disk','drip','drop','drum','fuse','gear','grid','horn','ions','lamp','lens','link','mesh','node','pipe','plug','pump','rail','scan','stem','tank','tube','vent','volt','wire','worm','zoom'],
+  5: ['orbit','laser','probe','alien','black','quark','pilot','radar','craft','blast','flare','pulse','storm','trail','glows','solar','lunar','comet','cargo','cabin','dwarf','field','forge','light','range','scope','visor','bloop','bwonk','space','clonk','dance','heads','snore','chair','clock','paint','snail','torch','squid','moose','groan'],
+  6: ['cosmic','planet','rocket','nebula','galaxy','photon','pulsar','quasar','helmet','thrust','portal','meteor','signal','vortex','launch','oxygen','shield','tether','tunnel','sector','sensor','astral','beacon','bridge','colony','debris','engine','hazard','geyser','holdup','impact','intake','jolted','kelvin','lander','glorbf','zorzax','cheese','blobby','sneeze','kettle','potato','jammed','stolen','frozen','butler','cactus','noodle','pigeon'],
+  9: ['supernova','spaceship','moonlight','commander','telescope','navigator','blackhole','stardrift','lightyear','launchpad','cosmonaut','warpspeed','astronaut','interlock','propelled','stargazer','spacesuit','timewaves','brigadier','afternoon','satellite','moustache','eyebrows','croissant','jellyfish'],
 };
 
 // Pre-planned length groups that sum to exactly 10 chars+spaces per round
@@ -913,12 +1300,17 @@ function buildKeyboard() {
 
 // ── GAME START ─────────────────────────────────────────────────
 function startGame() {
+  // Pre-initialise audio context on this user gesture so sounds work immediately
+  const ctx = getCtx();
+  if (ctx.state === 'suspended') ctx.resume();
+
   swallowed = 0; streak = 0; bestStreak = 0; collection = []; chunksUnlocked = 0; isAnimating = false;
   wordQueue = []; currentWord = ''; wordProgress = 0; pendingSpans = []; wordsCompleted = 0;
   document.getElementById('swallowedCount').textContent = 0;
   document.getElementById('streakCount').textContent = 0;
   document.getElementById('collectionGrid').innerHTML = '';
   document.getElementById('collectedCount').textContent = 0;
+  MILESTONES = buildMilestones();
   storyChunks = buildStory(pick(HEROES), pick(PROBLEMS), pick(HELPERS), pick(VILLAINS), pick(RESOLUTIONS));
   document.getElementById('setupScreen').classList.add('hidden');
   document.getElementById('gameScreen').classList.remove('hidden');
@@ -1323,7 +1715,129 @@ function soundFanfare() {
 }
 
 
-// ── RESTART ────────────────────────────────────────────────────
+// ── DEBUG PANEL ────────────────────────────────────────────────
+let debugHighlightErrors = true;
+
+function debugToggleErrors() {
+  debugHighlightErrors = !debugHighlightErrors;
+  document.getElementById('dbtnErrors').classList.toggle('active', debugHighlightErrors);
+  // Re-render current output with new setting
+  const n = document.getElementById('debugOutput').dataset.lastN;
+  if (n) debugGenerate(parseInt(n));
+}
+
+function debugCheckChunk(text) {
+  const errors = [];
+  const warns  = [];
+  if (/[.?!][.?!,]/.test(text))        errors.push('doubled punctuation');
+  if (/undefined/i.test(text))          errors.push('undefined in output');
+  if (/PLANETNAME/.test(text))          errors.push('unresolved PLANETNAME token');
+  if (/\bPOS\b/.test(text))             errors.push('unresolved POS token');
+  if (text.trim().length < 30)          warns.push('suspiciously short');
+  if (/  /.test(text))                  warns.push('double space');
+  if (/[""]\s*[,.]/.test(text))         warns.push('punct after close-quote');
+  return { errors, warns };
+}
+
+function debugCheckStory(chunks) {
+  const warns = [];
+  // Chunk 2 should contain cliffhanger content (will be longer than before)
+  if (chunks[1] && chunks[1].length < 80) warns.push('chunk 2 suspiciously short — missing escalation?');
+  // Chunk 5 should contain helper callback content
+  if (chunks[4] && chunks[4].length < 80) warns.push('chunk 5 suspiciously short — missing helperCallback?');
+  return warns;
+}
+
+function debugGenerate(n) {
+  const output = document.getElementById('debugOutput');
+  output.dataset.lastN = n;
+  output.innerHTML = '';
+
+  let totalErrors = 0, totalWarns = 0;
+  const t0 = performance.now();
+
+  for (let i = 0; i < n; i++) {
+    const h = pick(HEROES), p = pick(PROBLEMS), he = pick(HELPERS),
+          v = pick(VILLAINS), r = pick(RESOLUTIONS);
+    const chunks = buildStory(h, p, he, v, r);
+
+    let storyErrors = 0, storyWarns = 0;
+    const storyLevelWarns = debugCheckStory(chunks);
+    storyWarns += storyLevelWarns.length;
+    totalWarns += storyLevelWarns.length;
+    const chunkHTML = chunks.map((chunk, ci) => {
+      const { errors, warns } = debugCheckChunk(chunk);
+      storyErrors += errors.length;
+      storyWarns  += warns.length;
+      totalErrors += errors.length;
+      totalWarns  += warns.length;
+
+      let cls = 'debug-chunk';
+      let note = '';
+      if (debugHighlightErrors) {
+        if (errors.length) { cls += ' debug-error'; note = ' ⚠ ' + errors.join(', '); }
+        else if (warns.length) { cls += ' debug-warn'; note = ' · ' + warns.join(', '); }
+      }
+      return `<div class="${cls}"><span class="chunk-n">${ci+1}</span>${chunk}${note}</div>`;
+    }).join('');
+
+    const headerColour = storyErrors ? '#ff6666' : storyWarns ? '#ffaa44' : '#444';
+    output.innerHTML += `
+      <div class="debug-story">
+        <div class="ds-header" style="color:${headerColour}">
+          <span>Hero: <span>${h.name}</span></span>
+          <span>Problem: <span>${typeof p.announcement === 'function' ? p.announcement() : p.announcement}</span></span>
+          <span>Helper: <span>${he.name}</span></span>
+          <span>Villain: <span>${v.attribution ? v.attribution.slice(0,30) : ''}</span></span>
+          ${storyErrors ? `<span style="color:#ff6666">⚠ ${storyErrors} error(s)</span>` : ''}
+          ${storyWarns  ? `<span style="color:#ffaa44">· ${storyWarns} warning(s)</span>` : ''}
+        </div>
+        ${chunkHTML}
+      </div>`;
+  }
+
+  const elapsed = (performance.now() - t0).toFixed(1);
+  document.getElementById('debugStats').innerHTML = `
+    <div class="debug-stat">Stories generated<br><strong>${n}</strong></div>
+    <div class="debug-stat">Errors found<br><strong style="color:${totalErrors?'#ff6666':'#66ffb2'}">${totalErrors}</strong></div>
+    <div class="debug-stat">Warnings found<br><strong style="color:${totalWarns?'#ffaa44':'#66ffb2'}">${totalWarns}</strong></div>
+    <div class="debug-stat">Time<br><strong>${elapsed}ms</strong></div>
+  `;
+  document.getElementById('debugMeta').textContent =
+    `Generated ${n} stories · ${totalErrors} errors · ${totalWarns} warnings · ${elapsed}ms`;
+}
+
+function debugWordsPanel() {
+  const output = document.getElementById('debugOutput');
+  output.dataset.lastN = 0;
+  let html = '<div class="debug-story">';
+  for (const [len, words] of Object.entries(WORDS_BY_LEN)) {
+    const dupes = words.filter((w,i) => words.indexOf(w) !== i);
+    html += `<div class="debug-chunk">
+      <span class="chunk-n">${len}L</span>
+      <strong style="color:#888">${words.length} words:</strong>
+      ${words.map(w => dupes.includes(w)
+        ? `<span class="debug-error">${w}</span>`
+        : `<span style="color:#aaa">${w}</span>`).join('  ')}
+      ${dupes.length ? `<span class="debug-error"> ⚠ duplicates: ${dupes.join(', ')}</span>` : ''}
+    </div>`;
+  }
+  html += '</div>';
+  output.innerHTML = html;
+  document.getElementById('debugStats').innerHTML = '';
+  document.getElementById('debugMeta').textContent = 'Word list audit';
+}
+
+function toggleDebug() {
+  const panel = document.getElementById('debugPanel');
+  const isVisible = panel.classList.toggle('visible');
+  if (isVisible) debugGenerate(20);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.shiftKey && e.key === 'D') toggleDebug();
+});
+
 function confirmRestart() {
   document.getElementById('confirmModal').classList.remove('hidden');
 }
