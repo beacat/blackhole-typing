@@ -801,9 +801,7 @@ function showCurrentLetter() {
   obj.innerHTML = currentLetter === ' '
     ? '<span style="display:inline-block;border:4px solid rgba(255,224,102,0.9);border-radius:10px;padding:6px 28px;font-size:2.6rem;line-height:1.2;box-shadow:0 0 24px rgba(255,224,102,0.5);">space</span>'
     : currentLetter;
-  obj.style.animation = 'none';
   obj.classList.remove('sucking');
-  void obj.offsetWidth;
   obj.style.animation = 'objectFloat 2.5s ease-in-out infinite';
 
   document.querySelectorAll('.kbd-key').forEach(k => k.classList.remove('active-letter'));
@@ -925,13 +923,15 @@ function startGame() {
   document.getElementById('setupScreen').classList.add('hidden');
   document.getElementById('gameScreen').classList.remove('hidden');
   buildKeyboard();
-  if (gameMode === 'word') {
-    wordQueue = buildWordQueue();
-    nextWord();
-  } else {
-    nextLetter();
-  }
   document.addEventListener('keydown', handleKey);
+  requestAnimationFrame(() => {
+    if (gameMode === 'word') {
+      wordQueue = buildWordQueue();
+      nextWord();
+    } else {
+      nextLetter();
+    }
+  });
 }
 
 function goBack() {
@@ -959,9 +959,9 @@ function nextLetter() {
   // Show letter (or space symbol) as the floating object above black hole
   const obj = document.getElementById('spaceObject');
   obj.innerHTML = currentLetter === ' ' ? '<span style="display:inline-block;border:4px solid rgba(255,224,102,0.9);border-radius:10px;padding:6px 28px;font-size:2.6rem;line-height:1.2;box-shadow:0 0 24px rgba(255,224,102,0.5);">space</span>' : currentLetter;
-  obj.style.animation = 'none';
+  const wasSucking = obj.classList.contains('sucking');
   obj.classList.remove('sucking');
-  void obj.offsetWidth;
+  if (wasSucking) { obj.style.animation = 'none'; void obj.offsetWidth; }
   obj.style.animation = 'objectFloat 2.5s ease-in-out infinite';
 
   document.querySelectorAll('.kbd-key').forEach(k => k.classList.remove('active-letter'));
