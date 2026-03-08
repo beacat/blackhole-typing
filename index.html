@@ -1130,6 +1130,7 @@ let currentWord = '';
 let wordProgress = 0;
 let pendingSpans = [];
 let wordsCompleted = 0;
+let usedWords = new Set();
 
 function shuffleArray(arr) {
   const a = arr.slice();
@@ -1142,7 +1143,10 @@ function shuffleArray(arr) {
 
 function pickWord(len) {
   const pool = WORDS_BY_LEN[len] || WORDS_BY_LEN[4];
-  return pool[Math.floor(Math.random() * pool.length)];
+  const available = pool.filter(w => !usedWords.has(w));
+  const word = (available.length > 0 ? available : pool)[Math.floor(Math.random() * (available.length || pool.length))];
+  usedWords.add(word);
+  return word;
 }
 
 function buildWordQueue() {
@@ -1367,7 +1371,7 @@ function startGame() {
   if (ctx.state === 'suspended') ctx.resume();
 
   swallowed = 0; streak = 0; bestStreak = 0; collection = []; chunksUnlocked = 0; isAnimating = false;
-  wordQueue = []; currentWord = ''; wordProgress = 0; pendingSpans = []; wordsCompleted = 0;
+  wordQueue = []; currentWord = ''; wordProgress = 0; pendingSpans = []; wordsCompleted = 0; usedWords = new Set();
   document.getElementById('swallowedCount').textContent = 0;
   document.getElementById('streakCount').textContent = 0;
   document.getElementById('collectionGrid').innerHTML = '';
@@ -1650,6 +1654,12 @@ function showStory() {
 function keepPlaying() {
   document.getElementById('storyModal').classList.add('hidden');
   if (gameMode === 'word') {
+    // If the milestone hit mid-word, remove the incomplete word-group from the grid
+    if (currentWord !== ' ' && wordProgress > 0 && wordProgress < currentWord.length) {
+      const grid = document.getElementById('collectionGrid');
+      const groups = grid.querySelectorAll('.word-group');
+      if (groups.length > 0) groups[groups.length - 1].remove();
+    }
     const spaceSpan = document.createElement('span');
     spaceSpan.className = 'collected-item';
     spaceSpan.style.display = 'inline-block';
