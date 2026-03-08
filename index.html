@@ -768,7 +768,7 @@ function weekday() { return pick(WEEKDAY_PHRASES); }
 // ── HEROES ──────────────────────────────────────────────────────
 const HEROES = [
   { name:'Admiral Glorbf',     subj:'He',   obj:'him',  pos:'his',   trait:'been flying through space for 400 years and had never once found his keys',            opening:'He was halfway through his afternoon nap',                              title:'Admiral',      gag:'Glorbf still could not find his keys.' },
-  { name:'Commander Bloop',    subj:'She',  obj:'her',  pos:'her',   trait:'the squishiest alien in the whole Blobby Galaxy, and very proud of it',                opening:'She was practising her squishing in the mirror',                        title:'Commander',    gag:'Bloop celebrated by doing an enormous squelchy victory dance.' },
+  { name:'Commander Bloop',    subj:'She',  obj:'her',  pos:'her',   trait:'the squishiest alien toy in the whole Blobby Galaxy, and very proud of it',                opening:'She was practising her squishing in the mirror',                        title:'Commander',    gag:'Bloop celebrated by doing an enormous squelchy victory dance.' },
   { name:'Captain Zorzax',     subj:'She',  obj:'her',  pos:'her',   trait:'three heads, seven elbows, and absolutely terrible taste in hats',                    opening:'She was trying on her fourteenth hat of the morning',                   title:'Captain',      gag:'Zorzax immediately bought a celebratory hat, which was also terrible.' },
   { name:'General Snorble',    subj:'He',   obj:'him',  pos:'his',   trait:'the loudest sneeze in the universe, so loud he once accidentally launched a satellite',  opening:'He was trying very hard not to sneeze',                                 title:'General',      gag:'Snorble sneezed with relief, and three nearby asteroids changed course.' },
   { name:'Lieutenant Vrumf',   subj:'He',   obj:'him',  pos:'his',   trait:'seven arms and absolutely no idea what to do with most of them',                      opening:'He was reorganising his arms into a more comfortable arrangement',      title:'Lieutenant',   gag:'Vrumf waved all seven arms in celebration simultaneously, which caused minor chaos.' },
@@ -944,16 +944,16 @@ const PROBLEMS = [
 
 // ── HELPERS ─────────────────────────────────────────────────────
 const HELPERS = [
-  { entrance:'an extremely tiny spaceship landed on the dashboard, piloted by a hamster in a space helmet',                        name:'Brigadier Fluffington III',      offer:"I know exactly what's going on",                                                          condition:'It will cost you seventeen raisins' },
-  { entrance:'a small robot zoomed in through the ventilation shaft, riding a space tortoise',                                     name:'Pipwick',                        offer:'Have you considered that the answer might be on PLANETNAME?',                          condition:'Do you know how long it took me to find this tortoise?' },
-  { entrance:'a tiny door opened in the wall and out stepped a robot the size of a grape',                                         name:'Unit 00-BLIP',                   offer:'I have been monitoring this situation for some time. I know where you need to go',    condition:'I am coming with you whether you like it or not' },
-  { entrance:'a battered old spaceship pulled alongside and a very old alien leaned out the window, wearing enormous sunglasses',  name:'The Ancient One',                prose:'the ancient one',               offer:"Seen it before. You'll want PLANETNAME",                                              condition:"Don't ask me how I know. I just know" },
-  { entrance:'a small envelope slid under the door, containing a card that said "I CAN HELP" and a small map',                    name:'Anonymous',       prose:'the anonymous sender',  offer:"PLANETNAME. That's all I can say",                                                     condition:"Please do not try to find out who I am. It's better this way" },
-  { entrance:"the ship's cat walked in carrying something in its mouth, dropped it on the floor, and sat down looking very pleased", name:"The Ship's Cat (via interpreter)", prose:"the ship's cat (via interpreter)", offer:'The answer is on PLANETNAME. The cat has known for weeks',                        condition:'The cat would like more biscuits. Non-negotiable' },
-  { entrance:'a balloon floated in through an open hatch with a note tied to it',                                                  name:'Unknown Balloon Person',         prose:'the unknown balloon person',            offer:'I cannot come in person but PLANETNAME is where you need to go',                      condition:"Please return the balloon when you're done. It's my only one" },
-  { entrance:'one of the walls slid open to reveal a small alien who had apparently been living there for some time',              name:'Wumble',                         offer:"I've been watching. PLANETNAME. Obviously.",                                          condition:"Could I get a cup of tea? I've been in that wall for ages" },
-  { entrance:'a hologram flickered to life, showing a very frazzled-looking scientist surrounded by floating equations',           name:'Dr. Frumple',                    offer:'My calculations point to PLANETNAME, assuming I haven\'t made errors, which I almost certainly have', condition:"If I'm wrong, please don't tell anyone" },
-  { entrance:'a very official letter materialized out of thin air, sealed with seven wax seals and marked EXTREMELY URGENT',      name:'The Galactic Bureau of Things',  prose:'the Galactic Bureau of Things',  offer:'Pursuant to regulation 4,012(b), the relevant location is PLANETNAME',              condition:'Please sign the enclosed 47 forms before proceeding' },
+  { entrance:'an extremely tiny spaceship landed on the dashboard, piloted by a hamster in a space helmet',                        name:'Brigadier Fluffington III',      subj:'He',   obj:'him',  pos:'his',   offer:"I know exactly what's going on",                                                          condition:'It will cost you seventeen raisins' },
+  { entrance:'a small robot zoomed in through the ventilation shaft, riding a space tortoise',                                     name:'Pipwick',                        subj:'She',  obj:'her',  pos:'her', offer:'Have you considered that the answer might be on PLANETNAME?',                          condition:'Do you know how long it took me to find this tortoise?' },
+  { entrance:'a tiny door opened in the wall and out stepped a robot the size of a grape',                                         name:'Unit 00-BLIP',                   subj:'It',   obj:'it',   pos:'its',   offer:'I have been monitoring this situation for some time. I know where you need to go',    condition:'I am coming with you whether you like it or not' },
+  { entrance:'a battered old spaceship pulled alongside and a very old alien leaned out the window, wearing enormous sunglasses',  name:'The Ancient One',                subj:'She',  obj:'her',  pos:'her',  prose:'the ancient one',               offer:"Seen it before. You'll want PLANETNAME",                                              condition:"Don't ask me how I know. I just know" },
+  { entrance:'a small envelope slid under the door, containing a card that said "I CAN HELP" and a small map',                    name:'Anonymous',                      subj:'They', obj:'them', pos:'their', prose:'the anonymous sender',  offer:"PLANETNAME. That's all I can say",                                                     condition:"Please do not try to find out who I am. It's better this way" },
+  { entrance:"the ship's cat walked in carrying something in its mouth, dropped it on the floor, and sat down looking very pleased", name:"The Ship's Cat (via interpreter)", subj:'It', obj:'it', pos:'its',   prose:"the ship's cat (via interpreter)", offer:'The answer is on PLANETNAME. The cat has known for weeks',                        condition:'The cat would like more biscuits. Non-negotiable' },
+  { entrance:'a balloon floated in through an open hatch with a note tied to it',                                                  name:'Unknown Balloon Person',         subj:'They', obj:'them', pos:'their', prose:'the unknown balloon person',            offer:'I cannot come in person but PLANETNAME is where you need to go',                      condition:"Please return the balloon when you're done. It's my only one" },
+  { entrance:'one of the walls slid open to reveal a small alien who had apparently been living there for some time',              name:'Wumble',                         subj:'He',   obj:'him',  pos:'his', offer:"I've been watching. PLANETNAME. Obviously.",                                          condition:"Could I get a cup of tea? I've been in that wall for ages" },
+  { entrance:'a hologram flickered to life, showing a very frazzled-looking scientist surrounded by floating equations',           name:'Dr. Frumple',                    subj:'She',  obj:'her',  pos:'her', offer:'My calculations point to PLANETNAME, assuming I haven\'t made errors, which I almost certainly have', condition:"If I'm wrong, please don't tell anyone" },
+  { entrance:'a very official letter materialized out of thin air, sealed with seven wax seals and marked EXTREMELY URGENT',      name:'The Galactic Bureau of Things',  subj:'They', obj:'them', pos:'their', prose:'the Galactic Bureau of Things',  offer:'Pursuant to regulation 4,012(b), the relevant location is PLANETNAME',              condition:'Please sign the enclosed 47 forms before proceeding' },
 ];
 
 // ── VILLAINS ────────────────────────────────────────────────────
@@ -973,35 +973,35 @@ const VILLAINS = [
 // ── RESOLUTIONS ─────────────────────────────────────────────────
 const RESOLUTIONS = [
   { action:'thought about this for a moment, then baked a magnificent birthday cake on the spot',
-    outcome:'and everyone agreed that a cake fixes most things, which is usually true',
-    helperCallback:'They accepted a large slice of cake, which they agreed was the correct payment for their trouble.' },
+    outcome:'and a cake, it turned out, fixes most things, which is usually true',
+    helperCallback: he => `${he.subj} accepted a large slice of cake, which ${he.subj.toLowerCase()} agreed was the correct payment for ${he.pos} trouble.` },
   { action:'put the kettle on (which played a sad trombone noise) and made everyone a large cup of tea',
     outcome:'and by the second cup everyone was feeling considerably better',
-    helperCallback:'They stayed for tea, declared it excellent, and asked for the recipe.' },
-  { action:"paid the seventeen raisins, shook everyone's hand firmly, and declared the matter closed",
-    outcome:'and Brigadier Fluffington III did a small celebratory lap of the ship on his tiny spaceship',
-    helperCallback:'They pocketed their fee, gave a small salute, and departed looking extremely satisfied.' },
+    helperCallback: he => `${he.subj} stayed for tea, declared it excellent, and asked for the recipe.` },
+  { action:"made a short speech, shook everyone's hand firmly, and declared the matter officially closed",
+    outcome:'and a small but extremely dignified celebration broke out, as was only right',
+    helperCallback: he => `${he.subj} nodded, said that was exactly how ${he.subj.toLowerCase()} had expected it to go, and departed looking extremely satisfied.` },
   { action:'felt a familiar tickle, held up one finger as a warning to everyone, and then sneezed with tremendous force',
     outcome:'and the sneeze was so powerful it shook everything back to exactly how it should be',
-    helperCallback:'They had been standing at a safe distance, applauded, and said they had always hoped to see that.' },
+    helperCallback: he => `${he.subj} had been standing at a safe distance, applauded, and said ${he.subj.toLowerCase()} had always hoped to see that.` },
   { action:"sat everyone down, made a very long speech about forgiveness, and then produced a surprisingly good sandwich",
     outcome:"and nobody was entirely sure what had just happened, but the sandwich was excellent",
-    helperCallback:'They had a sandwich, nodded as if this all made perfect sense, and quietly slipped away.' },
+    helperCallback: he => `${he.subj} had a sandwich, nodded as if this all made perfect sense, and quietly slipped away.` },
   { action:"declared that the whole thing had been a misunderstanding, shook hands all round, and organised a small parade",
     outcome:"and the parade was only slightly chaotic, which for this crew was considered a triumph",
-    helperCallback:'They joined the parade, marched in the wrong direction, and seemed to consider this an improvement.' },
+    helperCallback: he => `${he.subj} joined the parade, marched in the wrong direction, and seemed to consider this an improvement.` },
   { action:"consulted the manual, found the relevant regulation, and then solved the problem by ignoring the manual entirely",
-    outcome:"and it worked, which the manual would never hear about",
-    helperCallback:'They borrowed the manual, said they had always wanted to read it, and left before anyone could ask why.' },
+    outcome:"and it worked, which nobody was going to update the manual about",
+    helperCallback: he => `${he.subj} borrowed the manual, said ${he.subj.toLowerCase()} had always wanted to read it, and left before anyone could ask why.` },
   { action:'took a deep breath, said "I know exactly what to do," and then figured it out while saying it',
     outcome:'and it turned out confidence was most of the solution, which is a useful thing to know',
-    helperCallback:'They nodded as if they had known this all along, which they possibly had.' },
+    helperCallback: he => `${he.subj} nodded as if ${he.subj.toLowerCase()} had known this all along, which ${he.subj.toLowerCase()} possibly had.` },
   { action:'offered everyone involved a very sincere apology, a cup of something warm, and exactly what they needed',
     outcome:"and it turned out that what everyone needed was quite reasonable, once you asked",
-    helperCallback:'They accepted their cup of something warm, said "that is how you do it," and departed.' },
+    helperCallback: he => `${he.subj} accepted ${he.pos} cup of something warm, said "that is how you do it," and departed.` },
   { action:"called a meeting, listed all the problems on a whiteboard, and then solved them in the wrong order by accident, which somehow worked out",
     outcome:"and the whiteboard was framed and hung in the corridor as a reminder",
-    helperCallback:'They studied the whiteboard for a long time, then said "yes, that is definitely one way to do it."' },
+    helperCallback: he => `${he.subj} studied the whiteboard for a long time, then said "yes, that is definitely one way to do it."` },
 ];
 
 // ── MILESTONES ──────────────────────────────────────────────────
@@ -1084,12 +1084,13 @@ function buildStory(h, p, he, v, r) {
     offer:     he.offer.replace(/\. PLANETNAME/, '. ' + cap(planet)).replace('PLANETNAME', planet).replace(/[.?!,]+$/, ''),
     condition: he.condition.replace(/\. PLANETNAME/, '. ' + cap(planet)).replace('PLANETNAME', planet).replace(/[.?!,]+$/, ''),
   };
+  const rResolved = { ...r, helperCallback: r.helperCallback(heResolved) };
   return [
     pick(CHUNK_TEMPLATES[0])(h, pResolved, sfx),
     pick(CHUNK_TEMPLATES[1])(h, pResolved, tool),
     pick(CHUNK_TEMPLATES[2])(heResolved),
     pick(CHUNK_TEMPLATES[3])(heResolved, vResolved, planet),
-    pick(CHUNK_TEMPLATES[4])(h, pResolved, r, day),
+    pick(CHUNK_TEMPLATES[4])(h, pResolved, rResolved, day),
   ];
 }
 
